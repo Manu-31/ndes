@@ -17,8 +17,8 @@
  */
 #define FILE_SIZE 30000
 
-#define ACCESS_LINK_THROUGHPUT 1000000
-#define ACCESS_LINK_TRANSM_TIME 0.00001
+#define ACCESS_LINK_THROUGHPUT    1000000
+#define ACCESS_LINK_TRANSMIT_TIME 0.00001
 
 #define RTT 0.020
 #define MTU 1500
@@ -43,7 +43,7 @@ int main()
    // The client access network
    link = llSimplex_create(sink,
                            PDUSink_processPDU,
-			   ACCESS_LINK_THROUGHPUT, ACCESS_LINK_TRANSM_TIME);
+			   ACCESS_LINK_THROUGHPUT, ACCESS_LINK_TRANSMIT_TIME);
 
    // The source
    src = srcTCPss_create(MTU, RTT, 1, link, llSimplex_processPDU);
