@@ -1220,6 +1220,7 @@ double probe_exhaustiveThroughput(struct probe_t * probe)
 
 double probe_meanThroughput(struct probe_t * probe)
 {
+   return probe->data.mean->valueSum/ (probe->data.mean->lastDate - probe->data.mean->firstDate);
    motSim_error(MS_FATAL, "A FAIRE !\n");
    return 0.0;
 }

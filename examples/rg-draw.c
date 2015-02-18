@@ -21,7 +21,7 @@ void draw(struct probe_t * pr, char * fileName, char * name, int nbBar, double p
    struct probe_t   * gb;
    struct gnuplot_t * gp;
 
-   printf("Min %f, max %f, nb %d\n", probe_min(pr), probe_max(pr), probe_nbSamples(pr));
+   printf("Min %f, max %f, nb %ld\n", probe_min(pr), probe_max(pr), probe_nbSamples(pr));
    /* On crée une sonde de type GraphBar */
    gb = probe_createGraphBar(probe_min(pr), probe_max(pr), nbBar/prop);
    probe_setName(gb, name);

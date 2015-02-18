@@ -19,7 +19,7 @@
 int main() {
    struct PDUSource_t     * sourcePDU;
    struct dateGenerator_t * dateGenExp;
-   struct PDU_sink_t      * sink;
+   struct PDUSink_t      * sink;
 
    /* Creation du simulateur */
    motSim_create();

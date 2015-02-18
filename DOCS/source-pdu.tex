@@ -1,0 +1,176 @@
+%========================================================================
+%
+%========================================================================
+\section{Les sources de {\sc pdu}}
+\label{section:pdu-source}
+
+   C'est bien joli d'avoir des {\sc pdu}, mais dans un réseau, il faut
+au moins une entité pour en injecter, sinon ça risque d'être un peu
+triste ! C'est le rôle des sources de {\sc pdu}. Ce sont elles qui
+vont injecter le trafic dans le réseau.
+
+   Le type le plus général est fourni dans {\tt
+include/pdu-source.h}. Il s'agit d'un outil relativement élémentaire
+   mais particulièrement simple.
+
+%-------------------------------------------------------------------------
+%
+%-------------------------------------------------------------------------
+\subsection{La source de base}
+
+   Le modèle de source le plus simple est donc décrit dans {\tt
+include/pdu-source.h} et implanté dans {\tt src/pdu-source.c}. Le type
+   suivant est défini 
+
+\index{struct PDUSource\_t}
+\begin{verbatim}
+   struct PDUSource_t;
+\end{verbatim}
+
+   Une source sera essentiellement caractérisée par deux jeux de
+composantes 
+
+\begin{itemize}
+   \item la loi régissant la date d'émission des {\sc pdu} ;
+   \item la loi régissant la taille des {\sc pdu}.
+\end{itemize}
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Création d'une source}
+
+   Une source est créée grâce à la fonction suivante
+
+\index{PDUSource\_create}
+\begin{verbatim}
+struct PDUSource_t * PDUSource_create(struct dateGenerator_t * dateGen,
+				      void * destination,
+				      processPDU_t destProcessPDU);
+\end{verbatim}
+
+   Les deux derniers paramètres caractérisent l'entité à laquelle
+doivent être transmises. Il s'agit, respectivement, d'un pointeur vers
+cette entité et  de la fonction par laquelle elle traite les {\sc pdu}
+entrantes.
+
+   Le premier paramètre est un pointeur vers un générateur de dates
+qui sera utilisé pour déterminer les dates  de production des {\sc
+  pdu} consécutives.
+
+   Par défaut, la taille des {\sc pdu} ainsi produite est nulle.
+
+%
+%
+%
+\paragraph{Source déterministe}
+
+   Il est également possible de créer une source ``déterministe'',
+c'est-à-dire dont les lois de création et de taille des paquets soient
+décrites par une liste exhaustive de valeurs prédéfinies.
+
+   On utilisera pour cela la fonction suivante
+
+\index{PDUSource\_createDeterministic}
+\begin{verbatim}
+struct PDUSource_t * PDUSource_createDeterministic(struct dateSize * sequence,
+						   void * destination,
+						   processPDU_t
+destProcessPDU);
+\end{verbatim}
+
+   Le permier pointeur est un tableau de couples date/taille terminé
+par un couple nul. La structure \lstinline!struct dateSize! est
+définie de la façon suivante 
+
+\index{struct dateSize}
+\begin{verbatim}
+struct dateSize {
+   motSimDate_t date;
+   unsigned int size;
+};
+\end{verbatim}
+
+   À titre d'exemple, le programme {\tt examples/inoutdemo.c} défini
+une séquence de trois {\sc pdu} de tailles respectives 1000, 2000 et
+2000 qui sont émises aux dates 0.0, 0.5 et 1.0. Cette définition est
+faite de la façon suivante
+
+\begin{verbatim}
+   struct dateSize sequence[] = {
+      {0.0, 1000.0},
+      {0.5, 2000.0},
+      {1.0, 2000.0},
+      {0.0, 0.0}
+   };
+\end{verbatim}
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Choix de la loi d'arrivée}
+
+   La loi régissant la date de production des {\sc pdu} peut être
+sélectionnée grâce à la fonction suivante
+
+\index{PDUSource\_setDateGenerator}
+\begin{verbatim}
+void PDUSource_setDateGenerator(struct PDUSource_t * src,
+                                struct dateGenerator_t * dateGen);
+\end{verbatim}
+
+   Les paramètres sont clairs ! {\tt src} pointe sur la source à
+modifier et {\tt dateGen} est un pointeur sur le générateur de dates à
+lui associer. Les générateurs de dates sont décrits dans la section
+\ref{section:date-gen}.
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Choix de la loi de la taille des {\sc pdu}}
+
+\index{PDUSource\_setPDUSizeGenerator}
+\begin{verbatim}
+void PDUSource_setPDUSizeGenerator(struct PDUSource_t * src,
+				   struct randomGenerator_t * rg);
+\end{verbatim}
+
+   Ici non plus, pas de surprise. Le premier paramètre est un pointeur
+sur la source à modifier et le second est un pointeur sur un
+générateur aléatoire à utiliser pour générer les tailles. Les
+générateurs aléatoires sont décrits dans la section
+\cite{section:rand-gen}.
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Démarage d'une source}
+
+   Quelle qu'elle soit, une source doit être démarrée afin de produire
+des {\sc pdu}. Pour cela, on utilisera la fonction suivante
+
+\index{PDUSource\_start}
+\begin{verbatim}
+void PDUSource_start(struct PDUSource_t * source);
+\end{verbatim}
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Les sondes}
+
+\index{PDUSource\_addPDUGenerationSizeProbe}
+\begin{verbatim}
+void PDUSource_addPDUGenerationSizeProbe(struct PDUSource_t * src,
+					 struct probe_t *  PDUGenerationSizeProbe);
+\end{verbatim}
+
+%-------------------------------------------------------------------------
+%
+%-------------------------------------------------------------------------
+\subsection{Une source périodique}
+
+%-------------------------------------------------------------------------
+%
+%-------------------------------------------------------------------------
+\subsection{Une source {\em Constant Bit Rate}}

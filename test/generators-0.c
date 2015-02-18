@@ -17,7 +17,6 @@
 int main() {
    struct dateGenerator_t * dateGenExp;
    unsigned long n;
-   double d = 0.0;
    double l = 3.0;
    double m;
 
@@ -32,7 +31,7 @@ int main() {
    dateGenerator_addInterArrivalProbe(dateGenExp, iap);
 
    for (n = 0 ; n < 10000000;n++){
-      d = dateGenerator_nextDate(dateGenExp, d);
+      dateGenerator_nextDate(dateGenExp);
    }
 
    m = probe_mean(iap);

@@ -36,7 +36,7 @@ int main() {
    dateGenerator_addInterArrivalProbe(dateGenExp, iap);
 
    for (n = 0 ; n < NBECH;n++){
-      d = dateGenerator_nextDate(dateGenExp, d);
+      d = dateGenerator_nextDate(dateGenExp);
    }
    printf("Lambda = %f : InterArrival  %f (%ld samples)\n", l, probe_mean(iap), probe_nbSamples(iap));
 

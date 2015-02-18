@@ -1,11 +1,14 @@
 SRC_FILES= $(wildcard *.c)
 OBJ_FILES= $(SRC_FILES:.c=.o)
 
-EXAMPLES = src-tcpss-ex inoutdemo debits rg-its rg-draw hdlc-demo example-1 example-2 example-3
+EXAMPLES = trafic-model-ex inoutdemo debits rg-its rg-draw example-1 example-2 example-3
 
 .PHONY: clean 
 
 all : $(EXAMPLES)
+
+trafic-model-ex : trafic-model-ex.o  ../$(SRC_DIR)/libndes.a
+	$(CC)  trafic-model-ex.o -o trafic-model-ex $(LDFLAGS)
 
 inoutdemo : inoutdemo.o ../$(SRC_DIR)/libndes.a
 	$(CC) inoutdemo.o -o inoutdemo $(LDFLAGS)

@@ -7,6 +7,7 @@ TESTS = generators-0 generators-1 \
 	probes-1 probes-2 probes-3 probes-4 \
 	muxdemux rr-mux \
 	drr \
+	source-1 source-2 \
 #	debits \
 #	muxfcfs-1 \
 #	intconf
@@ -18,6 +19,12 @@ all : $(TESTS)
 
 tests :  $(TESTS)
 	./run-tests.sh $(TESTS)
+
+source-1 : source-1.o ../$(SRC_DIR)/libndes.a
+	$(CC) source-1.o -o source-1 $(LDFLAGS)
+
+source-2 : source-2.o ../$(SRC_DIR)/libndes.a
+	$(CC) source-2.o -o source-2 $(LDFLAGS)
 
 drr : drr.o ../$(SRC_DIR)/libndes.a
 	$(CC) drr.o -o drr $(LDFLAGS)

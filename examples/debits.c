@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <strings.h>   // bzero, bcopy, ...
 #include <stdio.h>     // printf, ...
+#include <unistd.h>    // pause
 
 #include <file_pdu.h>
 #include <pdu-source.h>
@@ -113,14 +114,14 @@ int main() {
 /* Tracé gnuplot */
 /*---------------*/
 
-//   swGp = gnuplot_create();
-   //   gnuplot_displayProbe(swGp, WITH_POINTS, perSwP);
+   swGp = gnuplot_create();
+   gnuplot_displayProbe(swGp, WITH_POINTS, perSwP);
 
-   //   emaGp = gnuplot_create();
-   //   gnuplot_displayProbe(emaGp, WITH_POINTS, perEmaP);
+   emaGp = gnuplot_create();
+   gnuplot_displayProbe(emaGp, WITH_POINTS, perEmaP);
 
    taGp = gnuplot_create();
-   // gnuplot_displayProbe(taGp, WITH_POINTS, taP);
+   gnuplot_displayProbe(taGp, WITH_POINTS, taP);
 
    gnuplot_displayProbes(taGp, WITH_POINTS, taP, perSwP, perEmaP, NULL);
 

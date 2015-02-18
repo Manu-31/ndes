@@ -29,7 +29,7 @@ int main() {
    filePDU_setMaxLength(filePDU, NBMAX);
 
    for (n = 0 ; n < 2 * NBMAX; n++) {
-      filePDU_insert(filePDU, PDU_create(0, (void *)n));
+     filePDU_insert(filePDU, PDU_create(0, (void *)(long)n));
       filePDU_dump(filePDU);
    }
 
@@ -40,7 +40,7 @@ int main() {
    filePDU_setDropStrategy(filePDU, filePDU_dropHead);
    filePDU_reset(filePDU);
    for (n = 0 ; n < 2 * NBMAX; n++) {
-      filePDU_insert(filePDU, PDU_create(0, (void *)n));
+     filePDU_insert(filePDU, PDU_create(0, (void *)(long)n));
       filePDU_dump(filePDU);
    }
 
@@ -48,5 +48,5 @@ int main() {
 
    result = result || (filePDU_length(filePDU) != NBMAX);
 
-   return 0;
+   return result;
 }
