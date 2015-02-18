@@ -1,10 +1,14 @@
 /**
  * @file date-generator.h
  * @brief Les générateurs de dates
- * Ils sont largement fondé sur les générateurs de
+ *
+ * Ils sont largement fondés sur les générateurs de
  * nombres aléatoires.
  * Toutes les dates sont toujours exprimées en secondes depuis le début de
  * la simulation.
+ *
+ * WARNING : supprimer dateGenerator_create() qui pose problème avec
+ * l'appel à setStartDate()
  */
 
 #ifndef __DEF_DATE_GENERATOR
@@ -54,13 +58,22 @@ void dateGenerator_setRandomGenerator(struct dateGenerator_t * dateGen,
 void dateGenerator_addInterArrivalProbe(struct dateGenerator_t * dateGen,
 					struct probe_t * probe);
 
-/** @brief Obtention de la prochaine date
- *
- *  @param dateGen le générateur à utiliser
- *  @param currentTime la date actuelle
+/**
+ * @brief Obtention de la prochaine date
+ * @param dateGen le générateur à utiliser
  */
-double dateGenerator_nextDate(struct dateGenerator_t * dateGen,
-			      double currentTime);
+double dateGenerator_nextDate(struct dateGenerator_t * dateGen);
+
+/**
+ * @brief Choix de la date de démarrage
+ *
+ * Les dates seront générées à partir de la date passée en
+ * paramètre. Par défaut, c'est la date d'attribution du
+ * randomGenerator qui en fait office, c'est-à-dire 0.0 si c'est fait
+ * avant de lancer la simulation.
+ */
+void dateGenerator_setStartDate(struct dateGenerator_t * dateGen,
+				motSimDate_t date);
 
 /*
  * Modification du paramètre lambda
@@ -71,5 +84,12 @@ void dateGenerator_setLambda(struct dateGenerator_t * dateGen, double lambda);
  * Prepare for record values in order to replay on each reset
  */
 void dateGenerator_recordThenReplay(struct dateGenerator_t *  d);
+
+/**
+ * @brief Is this a periodic source ?
+ * @param d a date generator
+ * @result non null if d is periodic
+ */
+int dateGenerator_isPeriodic(struct dateGenerator_t *  d);
 
 #endif

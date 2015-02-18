@@ -1,5 +1,6 @@
-/** @file date-generator.c
- *  @brief Implantation des générateurs de dates
+/**
+ * @file date-generator.c
+ * @brief Implantation des générateurs de dates
  *
  */
 #include <stdio.h>     // printf
@@ -9,6 +10,8 @@
 #include <motsim.h>
 #include <probe.h>
 #include <random-generator.h>  
+
+#include <date-generator.h>  
 
 /**
  * @brief Implantation des générateurs de dates.
@@ -26,7 +29,7 @@ struct dateGenerator_t {
        de vérifier qu'on est conforme à ce que l'on souhaite. */
    struct probe_t * interArrivalProbe;
 
-  //   double (* nextDate)(struct dateGenerator_t * dateGen, double currentTime);  //   void           * data;
+   motSimDate_t lastDate; //!< Dernière date générée
 };
 
 /*-------------------------------------------------------------------------*/
@@ -43,12 +46,16 @@ void dateGenerator_setRandomGenerator(struct dateGenerator_t * dateGen,
  */
 struct dateGenerator_t * dateGenerator_create()
 {
+  printf_debug(DEBUG_GENE, "IN\n");
+
   struct dateGenerator_t * result = (struct dateGenerator_t * )
                   sim_malloc(sizeof(struct dateGenerator_t));
+
   result->interArrivalProbe = NULL;
-
   result->randGen = NULL;
+  dateGenerator_setStartDate(result, motSim_getCurrentTime());
 
+  printf_debug(DEBUG_GENE, "OUT %p\n", result);
   return result;
 }
 
@@ -81,24 +88,42 @@ struct dateGenerator_t * dateGenerator_createPeriodic(double period)
 /*   Les fonctions générales                                               */
 /*-------------------------------------------------------------------------*/
 /**
+ * @brief Choix de la date de démarrage
+ */
+void dateGenerator_setStartDate(struct dateGenerator_t * dateGen,
+                                motSimDate_t date)
+{
+   printf_debug(DEBUG_GENE, "IN\n");
+   dateGen->lastDate = date;
+
+   // A trick to ensure a periodic dateGenerator will start at date
+   if ((dateGen->randGen) && (dateGenerator_isPeriodic(dateGen))) {
+      printf_debug(DEBUG_GENE, "%p is periodic\n", dateGen);
+      dateGen->lastDate -= randomGenerator_getNextDouble(dateGen->randGen);
+   }
+   printf_debug(DEBUG_GENE, "OUT (lastDate %lf)\n", dateGen->lastDate);
+}
+
+/**
  * @brief Choix du générateur aléatoire des durées entre dates
  *
  * @param dateGen le générateur à modifier
- * @param randGen le générateur de date à affecter
+ * @param randGen le générateur aléatoire à affecter
  */
 void dateGenerator_setRandomGenerator(struct dateGenerator_t * dateGen,
 				      struct randomGenerator_t * randGen)
 {
    dateGen->randGen = randGen;
+   dateGenerator_setStartDate(dateGen, motSim_getCurrentTime());
 }
 
-
-/** @brief Obtention de la prochaine date
+/**
+ * @brief Obtention de la prochaine date
  *
- *  @param dateGen le générateur à utiliser
- *  @param currentTime la date actuelle
+ * @param dateGen le générateur à utiliser
+ * @param currentTime la date actuelle
  */
-double dateGenerator_nextDate(struct dateGenerator_t * dateGen, double currentTime)
+double dateGenerator_nextDate(struct dateGenerator_t * dateGen)
 {
    double result =  randomGenerator_getNextDouble(dateGen->randGen);
 
@@ -107,8 +132,9 @@ double dateGenerator_nextDate(struct dateGenerator_t * dateGen, double currentTi
       printf_debug(DEBUG_GENE, " Mean = %6.3f\n", probe_mean(dateGen->interArrivalProbe));
    }
 
-   return currentTime + result ;
-  //   return dateGen->nextDate(dateGen, currentTime);
+   dateGen->lastDate += result;
+
+   return dateGen->lastDate;
 }
 
 /**
@@ -162,3 +188,20 @@ void dateGenerator_setLambda(struct dateGenerator_t * dateGen, double lambda)
 void dateGenerator_recordThenReplay(struct dateGenerator_t *  d){
   randomGenerator_recordThenReplay(d->randGen);
 };
+
+/**
+ * @brief Is this a periodic source ?
+ * @param d a date generator
+ * @result non null if d is periodic
+ */
+int dateGenerator_isPeriodic(struct dateGenerator_t *  d)
+{
+   int result;
+
+   printf_debug(DEBUG_GENE, "IN\n");
+   result = randomGenerator_isConstant(d->randGen);
+   printf_debug(DEBUG_GENE, "OUT %d\n", result);
+
+   return result;
+}
+

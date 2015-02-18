@@ -10,6 +10,6 @@ int main()
    dateGen = dateGenerator_create();
 
    for (i = 0; i < 20; i++) {
-     printf("%f, ", dateGenerator_nextDate(dateGen, 0.0));
+     printf("%f, ", dateGenerator_nextDate(dateGen));
    }
 }

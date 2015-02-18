@@ -1,4 +1,7 @@
-/*     Une source de PDU permet de produire des PDUs */
+/**
+ * @file pdu-source.h
+ * @brief Une source de PDU permet de produire des PDUs 
+ */
 
 #include <random-generator.h>
 #include <date-generator.h>
@@ -46,17 +49,51 @@ struct PDUSource_t * PDUSource_create(struct dateGenerator_t * dateGen,
  *  Un tel générateur permet de définir explicitement la séquence des
  *  PDUs à générer. Cette séquence est définie par un tableau de
  *  couples {date, taille}. Le dernier élément du tableau doit être
- *  {0.0, 0}. Le tableau n'est pas copié, il ne doit donc pas être
+ *  doté d'une date antérieure à la précédente (typiquement {-1.0,
+ *  0}). Le tableau n'est pas copié, il ne doit donc pas être
  *  libéré tant que la source peut servir.
  */
 struct PDUSource_t * PDUSource_createDeterministic(struct dateSize * sequence,
 						   void * destination,
 						   processPDU_t destProcessPDU);
+
+/**
+ * @brief Création d'une source périodique
+ * @param period période de génération des PDU
+ * @param destination l'entité aval
+ * @param destProcessPDU fonction de traitement des PDU par l'aval
+ * @result une source périodique initialisée
+ *
+ * Création d'une source de PDU périodique. La période est fournie en
+ * paramètre. La taille des PDU est nulle. La première PDU est
+ * générée à la date d'invocation de PDUSource_start.
+ */
+struct PDUSource_t * PDUSource_createPeriodic(double period,
+					      void * destination,
+					      processPDU_t destProcessPDU);
+
+/**
+ * @brief Création d'une source CBR
+ * @param period période de génération des PDU
+ * @param size taille des PDU
+ * @param destination l'entité aval
+ * @param destProcessPDU fonction de traitement des PDU par l'aval
+ * @result une source périodique initialisée
+ *
+ * Création d'une source de PDU CBR. La période est fournie en
+ * paramètre ainsi que la taille des PDU. La première PDU est
+ * générée à la date d'invocation de PDUSource_start.
+ */
+struct PDUSource_t * PDUSource_createCBR(double period,
+                                         unsigned int size,
+					 void * destination,
+					 processPDU_t destProcessPDU);
+
 /**
  * @brief Change the date generator
  * @param src The PDUSource to modify
  * @param gen The new date generator
- * The previos date generator should be freed by the caller
+ * The previous date generator should be freed by the caller
  */
 void PDUSource_setDateGenerator(struct PDUSource_t * src,
                                 struct dateGenerator_t * dateGen);

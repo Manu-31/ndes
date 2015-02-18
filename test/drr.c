@@ -17,24 +17,24 @@ int main() {
      {0.0, 200},
      {0.0, 750},
      {0.0,  20},
-     {0, 0}
+     {-1.0, 0}
    };
   struct dateSize sequence2[] = {
      {0.0, 500},
      {0.0, 500},
-     {0, 0}
+     {-1.0, 0}
    };
   struct dateSize sequence3[] = {
      {0.0, 100},
      {0.0, 600},
      {0.0, 200},
-     {0, 0}
+     {-1.0, 0}
    };
   struct dateSize sequence4[] = {
      {0.0, 180},
      {0.0, 700},
      {0.0,  50},
-     {0, 0}
+     {-1.0, 0}
    };
 
    struct PDUSource_t * sourcePDU1, *sourcePDU2, * sourcePDU3, *sourcePDU4;

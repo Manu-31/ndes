@@ -4,3 +4,113 @@
 \section{Les générateurs de dates}
 \label{section:date-gen}
 
+   Les générateurs de dates servent à générer \ldots{} des dates ! Ils
+seront donc utiles en particulier pour les sources de {\sc pdu}
+auxquelles ils fourniront les dates de création des fameuses {\sc
+  pdu}.
+
+   Un générateur de date est alors essentiellement caractérisé par une
+loi d'inter-arrivée. Il s'agit de la loi qui régit le temps séparant
+deux dates consécutives.
+
+%------------------------------------------------------------------------
+%
+%------------------------------------------------------------------------
+\subsection{Création}
+
+   Un générateur aléatoire est créé de la façon suivante
+
+\index{dateGenerator\_create}
+\begin{verbatim}
+struct dateGenerator_t * dateGenerator_create();
+\end{verbatim}
+
+   Il est alors inutilisable ! Il doit en effet lui être associée une
+loi d'inter-arrivée. Cela dit, il existe des constructeurs (décrits
+ci-dessous) permettant de créer un générateur de date directement
+initialisé avec un générateur aléatoire.
+
+%------------------------------------------------------------------------
+%
+%------------------------------------------------------------------------
+\subsection{Démarrage}
+
+   Le démarrage d'un générateur de date est la date à partir de
+laquelle il est susceptible de produire des dates (je ne parle pas de
+dattes hein !).
+
+   Elle peut être choisie grâce à la fonction suivante :
+
+\index{dateGenerator\_setStartDate}
+\begin{verbatim}
+void dateGenerator_setStartDate(struct dateGenerator_t * dateGen,
+				motSimDate_t date);
+\end{verbatim}
+
+   Par défaut, cette date sera celle de la fin d'initialisation du
+générateur, c'est-à-dire la date à laquelle sa loi d'inter-arrivée
+aura été définie. En général, cela se fera à l'initialisation,
+probablement avant de lancer la simulation, donc à la date 0.0.
+
+%------------------------------------------------------------------------
+%
+%------------------------------------------------------------------------
+\subsection{Choix de la loi d'inter arrivée}
+
+\index{dateGenerator\_createPeriodic}
+\begin{verbatim}
+void dateGenerator_setRandomGenerator(struct dateGenerator_t * dateGen,
+				      struct randomGenerator_t * randGen);
+\end{verbatim}
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Les générateurs périodiques}
+
+   On peut créer des générateurs périodiques grâce à la fonction
+suivante, dont je ne pense pas avoir besoin de vous décrire l'unique
+paramètre \ldots
+
+\index{dateGenerator\_createPeriodic}
+\begin{verbatim}
+struct dateGenerator_t * dateGenerator_createPeriodic(double period);
+\end{verbatim}
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Les générateurs Poissoniens}
+
+   Ils sont créés par la fonction suivante, dont le paramêtre est
+clair !
+
+\index{dateGenerator\_createExp}
+\begin{verbatim}
+struct dateGenerator_t * dateGenerator_createExp(double lambda);
+\end{verbatim}
+
+%------------------------------------------------------------------------
+%
+%------------------------------------------------------------------------
+\subsection{Obtention d'une date}
+
+   Le rôle principal d'un générateur de date est donc de fournir des
+dates. Voici la fonction qui permet cette merveille~:
+
+\index{dateGenerator\_nextDate}
+\begin{verbatim}
+double dateGenerator_nextDate(struct dateGenerator_t * dateGen);
+\end{verbatim}
+
+%------------------------------------------------------------------------
+%
+%------------------------------------------------------------------------
+\subsection{Fonctions annexes}
+
+\index{dateGenerator\_isPeriodic}
+\begin{verbatim}
+int dateGenerator_isPeriodic(struct dateGenerator_t *  d);
+\end{verbatim}
+
+

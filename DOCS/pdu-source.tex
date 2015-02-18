@@ -62,8 +62,11 @@ struct dateSize {
 \end{verbatim}
 
    La séquence passée en paramètre à {\tt
-     PDUSource\_createDeterministic} doit être ordonnée
-   chronologiquement et terminée par un couple {\tt \{0.0, 0\}}.
+ PDUSource\_createDeterministic} doit être ordonnée
+chronologiquement et terminée par un couple tel que {\tt \{-1.0, 0\}}
+(en fait, il faut simplement que le dernier couple ait une date
+antérieur à celle du couple précédent).
+
 %.......................................................................
 %
 %.......................................................................
@@ -89,4 +92,21 @@ struct dateSize {
 %.......................................................................
 \subsection{Les sondes}
 
+%.......................................................................
+%
+%.......................................................................
+\subsection{Quelques sources prédéfinies}
 
+%
+%
+%
+\subsubsection{Une source déterministe}
+
+%
+%
+%
+\subsubsection{Une source périodique}
+%
+%
+%
+\subsubsection{Une source {\sc cbr}}

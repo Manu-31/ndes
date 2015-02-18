@@ -337,6 +337,9 @@ double randomGenerator_getNextDouble(struct randomGenerator_t * rg)
    double result = 0.0;
 
    switch (rg->valueType) {
+      case rGTypeDoubleConstant :
+         result = rg->param.d.min;
+      break;
       case rGTypeDouble :
          result = rg->distGetNext(rg);
       break;
@@ -541,8 +544,17 @@ struct randomGenerator_t * randomGenerator_createUIntConstant(unsigned int v)
    return result;
 }
 
+struct randomGenerator_t * randomGenerator_createDoubleConstant(double v)
+{
+  struct randomGenerator_t * result = randomGenerator_createRaw();
 
+   // Data type
+   result->valueType = rGTypeDoubleConstant;
+   result->param.d.min = v;
+   result->param.d.max = v;
 
+   return result;
+}
 
 /*
  * CrÃ©ation d'un gÃ©nÃ©rateur alÃ©atoire de nombres entiers.
@@ -866,4 +878,29 @@ void readUIntDiscreteProbaFromFile(char * fileName,
 
    } 
    fclose(f);
+}
+
+/**
+ * @brief Tell if a random generator is constant
+ * @param rg a random generator to test
+ * @result non null if rg is constant
+ *
+ * A random generator is constant if it has been defined as a constant
+ * or if has been defined as a discrete distribution with a single
+ * value.
+ */
+int randomGenerator_isConstant(struct randomGenerator_t * rg)
+{
+  printf_debug(DEBUG_ALWAYS, "%p Value type %d, distribution %d\n", rg, rg->valueType, rg->distribution);
+
+   // Constant types
+   if ((rg->valueType == rGTypeDoubleConstant)
+     ||(rg->valueType == rGTypeUIntConstant)){
+      return 1;
+   // Discrete types with single value
+   } else if ((rg->distribution == rGDistDiscrete) && ( rg->distParam.d.discrete.nbProba == 1)){
+      return 1;
+   } else {
+      return 0;
+   }
 }

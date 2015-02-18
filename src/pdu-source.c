@@ -7,6 +7,10 @@
  *   destination. Si celle-ci ne la consomme pas, elle RESTE
  *   DISPONIBLE jusqu'à la production de la suivante.
  *
+ * WARNING il reste des choses à rendre plus propres, en particulier
+ * la gestion des sources "déterministes" (qui délivrent une séquence
+ * pré établie). Il faudra définir un générateur aléatoire de type
+ * séquence pour l'utiliser ici. 
  */
 #include <stdlib.h>    // Malloc, NULL, exit...
 
@@ -124,6 +128,51 @@ struct PDUSource_t * PDUSource_createDeterministic(struct dateSize * sequence,
 
 }
 
+/**
+ * @brief Création d'une source périodique
+ * @param period période de génération des PDU
+ * @param destination l'entité aval
+ * @param destProcessPDU fonction de traitement des PDU par l'aval
+ * @result une source périodique initialisée
+ *
+ * Création d'une source de PDU périodique. La période est fournie en
+ * paramètre. La taille des PDU est nulle. La première PDU est
+ * générée à la date d'invocation de PDUSource_start.
+ */
+struct PDUSource_t * PDUSource_createPeriodic(double period,
+					      void * destination,
+					      processPDU_t destProcessPDU)
+{
+   return PDUSource_createCBR(period, 0, destination, destProcessPDU);
+}
+
+/**
+ * @brief Création d'une source CBR
+ * @param period période de génération des PDU
+ * @param size taille des PDU
+ * @param destination l'entité aval
+ * @param destProcessPDU fonction de traitement des PDU par l'aval
+ * @result une source périodique initialisée
+ *
+ * Création d'une source de PDU CBR. La période est fournie en
+ * paramètre ainsi que la taille des PDU. La première PDU est
+ * générée à la date d'invocation de PDUSource_start.
+ */
+struct PDUSource_t * PDUSource_createCBR(double period,
+                                         unsigned int size,
+					 void * destination,
+					 processPDU_t destProcessPDU)
+{
+   struct PDUSource_t * result = PDUSource_create(NULL,
+						  destination,
+						  destProcessPDU);
+
+   PDUSource_setDateGenerator(result, dateGenerator_createPeriodic(period));
+   PDUSource_setPDUSizeGenerator(result, randomGenerator_createUIntConstant(size));
+
+   return result;   
+}
+
 /*
  * Positionnement d'une sonde sur la taille des PDUs produites. Toutes
  * les PDUs créées sont concernées, même si elles ne sont pas
@@ -143,7 +192,8 @@ void PDUSource_setPDUSizeGenerator(struct PDUSource_t * src, struct randomGenera
    src->sizeGen = rg;
 }
 
-/** @brief émission de la PDU courante et création de la prochaine
+/**
+ * @brief émission de la PDU courante et création de la prochaine
  * 
  * C'est cette fonction qui émet la PDU courante. Elle doit donc être
  * invoquée au bon moment (au travers d'un événement qu'elle aura
@@ -162,6 +212,8 @@ void PDUSource_buildNewPDU(struct PDUSource_t * source)
 
    printf_debug(DEBUG_SRC, " IN\n");
 
+   // 1 - Emission de la nextPDU
+   /////////////////////////////
    // Suppression de la PDU précédente si pas consommée
    if (source->pdu) {
       printf_debug(DEBUG_SRC, " Destruction de %d\n", PDU_id(source->pdu));
@@ -172,7 +224,6 @@ void PDUSource_buildNewPDU(struct PDUSource_t * source)
    source->pdu = source->nextPdu;
 
    if (source->pdu) { // La première fois, c'est un coup à blanc
-
       // Transmission de la nouvelle PDU
       printf_debug(DEBUG_SRC, " PDU %d (size %u) sent at %6.3f\n",
                    PDU_id(source->pdu), PDU_size(source->pdu),motSim_getCurrentTime());
@@ -182,19 +233,21 @@ void PDUSource_buildNewPDU(struct PDUSource_t * source)
          probe_sample(source->PDUGenerationSizeProbe, (double)PDU_size(source->pdu));
       }
 
-   printf_debug(DEBUG_SRC, " COUCOU\n");
+      printf_debug(DEBUG_SRC, " COUCOU\n");
       // On passe la PDU au suivant  
       if ((source->destProcessPDU) && (source->destination)) {
-   printf_debug(DEBUG_SRC, " On passe\n");
+         printf_debug(DEBUG_SRC, " On passe\n");
          // On logue cet événement
- 	ndesLog_logLineF(PDU_getObject(source->pdu),
+         ndesLog_logLineF(PDU_getObject(source->pdu),
                          "CREATED_BY %d", PDUSource_getObjectId(source));
-        (void)source->destProcessPDU(source->destination,
+         (void)source->destProcessPDU(source->destination,
                                      (getPDU_t)PDUSource_getPDU,
                                      source);
       }
    }
-   // Maintenant on prépare la prochaine PDU
+
+   // 2 - Creation de la nextPDU
+   /////////////////////////////
    printf_debug(DEBUG_SRC, " building next PDU ...\n");
 
    // Gestion de la version "déterministe" par une valeur spéciale du
@@ -215,17 +268,16 @@ void PDUSource_buildNewPDU(struct PDUSource_t * source)
 
    } else {
       // On détermine la date de prochaine transmission
-      date = dateGenerator_nextDate(source->dateGen, motSim_getCurrentTime());
+      date = dateGenerator_nextDate(source->dateGen);
       // On choisi la taille
       size = source->sizeGen?randomGenerator_getNextUInt(source->sizeGen):0;
    }
 
    printf_debug(DEBUG_SRC, " next PDU to be sent at %f\n", date);
 
-   // Un petit hack pour arrêter si une source déterministe a un {0.0, 0}
-   if ((date >= motSim_getCurrentTime())
-       && ((size != 0) || (source->dateGen))
-      ) {
+   // 3 - Création de la PDU et programmation de sa transmission si la
+   // date n'est pas dépassée. Si elle l'est, la source s'arrète
+   if (date >= motSim_getCurrentTime()) {
       // Création de la prochaine PDU
       source->nextPdu = PDU_create(size, NULL); 
 
@@ -264,6 +316,11 @@ struct PDU_t * PDUSource_getPDU(void * src)
    return pdu;
 }
 
+/**
+ * @brief Démarrage d'une source dans le cadre d'un simulateur
+ *
+ * A partir de cet instant, elle peut produire des PDUs.
+ */
 void PDUSource_start(struct PDUSource_t * source)
 {
    // On ne sait jamais (cette fonction sert de reset)
@@ -274,18 +331,5 @@ void PDUSource_start(struct PDUSource_t * source)
 
    // On lance la machine
    PDUSource_buildNewPDU(source);
-
-   // On détermine la date de prochaine transmission
-   //   date = dateGenerator_nextDate(source->dateGen, motSim_getCurrentTime());
-
-   //A FAIRE ...
-
-   //   printf_debug(DEBUG_SRC, " First PDU at %f\n", date);
-
-   // On crée un événement pour cette date
-//   event = event_create((eventAction_t)PDUSource_buildNewPDU, source, date);
-
-   // On ajoute cet événement au simulateur
-   //   motSim_addEvent(event);
 }
 

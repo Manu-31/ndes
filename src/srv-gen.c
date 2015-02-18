@@ -119,7 +119,7 @@ void srvGen_startService(struct srvGen_t * srv, struct PDU_t * pdu)
       date = motSim_getCurrentTime() + PDU_size(pdu) * srv->serviceTimeParameter;
    } else {
       assert(srv->dateGenerator);
-      date = dateGenerator_nextDate(srv->dateGenerator, motSim_getCurrentTime());
+      date = dateGenerator_nextDate(srv->dateGenerator);
    }
 
    printf_debug(DEBUG_SRV, " PDU %d from %6.3f to %6.3f\n", PDU_id(pdu), motSim_getCurrentTime(), date);

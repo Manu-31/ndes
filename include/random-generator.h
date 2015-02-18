@@ -31,7 +31,7 @@ struct randomGenerator_t;
 #define rGTypeDoubleEnum   7
 #define rGTypeUIntRange    8
 #define rGTypeUIntConstant 9
-
+#define rGTypeDoubleConstant 10
 
 /*
  * Available distributions
@@ -72,8 +72,12 @@ struct randomGenerator_t * randomGenerator_createUIntConstant(unsigned int v);
 // Des entiers non signÃ©s listÃ©s
 struct randomGenerator_t * randomGenerator_createUIntDiscrete(int nbValues,
 							      unsigned int * values);
-// Des rÃ©els double prÃ©cision
+// Des réels double précision
 struct randomGenerator_t * randomGenerator_createDouble();
+
+// Des réels double précision tous égaux ...
+struct randomGenerator_t * randomGenerator_createDoubleConstant(double v);
+
 
 /*
  * Creators with a pre defined distribution
@@ -220,6 +224,18 @@ double randomGenerator_getNextDouble(struct randomGenerator_t * rg);
  * d'expÃ©riences, on utilisera des sondes.
  */
 double randomGenerator_getExpectation(struct randomGenerator_t * rg);
+
+/**
+ * @brief Tell if a random generator is constant
+ * @param rg a random generator to test
+ * @result non null if rg is constant 
+ *
+ * A random generator is constant if it has been defined as a constant
+ * or if has been defined as a discrete distribution with a single
+ * value.
+ */
+int randomGenerator_isConstant(struct randomGenerator_t * rg);
+
 
 /*==========================================================================*/
 /*   Probes                                                                 */ 
