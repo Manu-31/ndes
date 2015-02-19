@@ -58,7 +58,8 @@ int main()
    // Send a file
    srcTCPss_sendFile(src, FILE_SIZE);
 
-   // 
+   // We will later send two other files to test "persistent
+   // connections"
    event_add((void (*)(void *data))sendOneFile, (void*)src, 0.20);
    event_add((void (*)(void *data))sendOneFile, (void*)src, 100.0);
 
