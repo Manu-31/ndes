@@ -1,7 +1,7 @@
 SRC_FILES= $(wildcard *.c)
 OBJ_FILES= $(SRC_FILES:.c=.o)
 
-EXAMPLES = trafic-model-ex inoutdemo debits rg-its rg-draw example-1 example-2 example-3
+EXAMPLES = src-tcpss-ex trafic-model-ex inoutdemo debits rg-its rg-draw example-1 example-2 example-3
 
 .PHONY: clean 
 
