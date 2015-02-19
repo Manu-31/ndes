@@ -25,10 +25,10 @@ struct srcTCPSS_t {
    double             RTT;
 
    int                backlog;   //!< the number of unsent bytes
+   int                nbSentSegments;  //!< Number of segments actually sent
    struct filePDU_t * outputQueue; //!< An internal queue where
 				   //!segments are queued waiting to
 				   //!be actually sent
-
    void        * destination;    //!< L'objet auquel sont destinées les PDUs
    processPDU_t  destProcessPDU; //!< La fonction permettant de
 				 //!signaler à la destination la
@@ -56,6 +56,7 @@ struct srcTCPSS_t * srcTCPss_create(int MTU,
    result->MSS = MTU - TCP_BASE_HEADER_SIZE ;
    result->RTT = RTTmd;
    result->backlog = 0;
+   result->nbSentSegments = 0;
    result->destination = destination;
    result->destProcessPDU = destProcessPDU;
    result->outputQueue = filePDU_create(NULL, NULL);
@@ -78,7 +79,7 @@ void srcTCPss_sendSegment(struct srcTCPSS_t * src)
    segmentSize = min(src->backlog, src->MSS);
 
    if (segmentSize > 0) {
-      printf_debug(DEBUG_ALWAYS, "Will send a segment of %d bytes (out of %d remaining)\n", segmentSize, src->backlog);
+      printf_debug(DEBUG_SRC, "Will send a segment of %d bytes (out of %d remaining)\n", segmentSize, src->backlog);
 
       src->backlog -= segmentSize;
 
@@ -88,7 +89,7 @@ void srcTCPss_sendSegment(struct srcTCPSS_t * src)
       // We insert it in the outputQueue 
       filePDU_insert(src->outputQueue, segment);
 
-      printf_debug(DEBUG_ALWAYS, "Segment in the queue, notifying the destination\n");
+      printf_debug(DEBUG_SRC, "Segment in the queue, notifying the destination\n");
 
       // Now we notify the destination 
       src->destProcessPDU(src->destination, srcTCPss_getPDU, src);
@@ -128,15 +129,19 @@ void srcTCPss_send2Segments(void * s)
 void srcTCPss_sendFile(struct srcTCPSS_t * src,
                        int nbBytes)
 {
-   src->backlog = nbBytes;
+   printf_debug(DEBUG_SRC, "Will send %d bytes (ws %d)\n", nbBytes, src->windowSize);
 
-   printf_debug(DEBUG_ALWAYS, "Will send %d bytes\n", nbBytes);
+   if (srcTCPss_isEmpty(src)) {
+      src->backlog = nbBytes;
 
-   // Send as many segments as possible
-   srcTCPss_sendSegments(src, min(src->windowSize, nbBytes/src->MSS));
-
-   // Record future window size for the next transmission
-   src->windowSize += nbBytes/src->MSS;
+      printf_debug(DEBUG_SRC, "First burst of %d segments\n",  min(src->windowSize, (nbBytes + src->MSS - 1)/src->MSS));
+      // Send as many segments as possible
+      srcTCPss_sendSegments(src, min(src->windowSize, (nbBytes + src->MSS - 1)/src->MSS));
+   } else {
+      printf_debug(DEBUG_SRC, "Persistent use\n");
+      // If the source is already active, we just add these new bytes
+      src->backlog += nbBytes;
+   }
 }
 
 /**
@@ -147,18 +152,59 @@ void srcTCPss_sendFile(struct srcTCPSS_t * src,
 struct PDU_t * srcTCPss_getPDU(void * s)
 {
    struct srcTCPSS_t * src = (struct srcTCPSS_t *) s;
+   struct PDU_t * result = NULL;
 
-   printf_debug(DEBUG_ALWAYS, "IN\n");
+   printf_debug(DEBUG_SRC, "IN\n");
 
   // If a PDU is available, we send it and (slow start) schedule 2 new
   // PDUs, if available
   if (filePDU_length(src->outputQueue) > 0) {
-     printf_debug(DEBUG_ALWAYS, "scheduling two more segments\n");
+     printf_debug(DEBUG_SRC, "scheduling two more segments\n");
      event_add(srcTCPss_send2Segments, src, motSim_getCurrentTime() + src->RTT);
-     printf_debug(DEBUG_ALWAYS, "returning a segment\n");
-     return filePDU_extract(src->outputQueue);
+     result = filePDU_extract(src->outputQueue);
+     src->nbSentSegments++;
+     printf_debug(DEBUG_SRC, "returning a segment (nb %d)\n", src->nbSentSegments);
+     if (srcTCPss_isEmpty(src)) {
+        printf_debug(DEBUG_SRC, "(last for now)\n");
+        // This is the end of the transmission, we need to save window
+        // size for the next transmission, if any
+        src->windowSize += src->nbSentSegments;
+        src->nbSentSegments = 0;
+     }
+     return result; 
   } else { // Should not occur ...
-     printf_debug(DEBUG_ALWAYS, "OUT\n");
+     printf_debug(DEBUG_SRC, "OUT\n");
      return NULL;
   }
+}
+
+/**
+ * @brief is the source empty ?
+ * @param src is a source
+ * @return non null if at least one byte remains to be sent
+ *
+ * A source is "empty" as soon as every byte has bee sent. Be carefull
+ * that an empty source will turn to non empty after a (new) call to
+ * srcTCPss_sendFile.
+ */
+int srcTCPss_isEmpty(struct srcTCPSS_t * src)
+{
+   return ((src->backlog == 0) && (filePDU_length(src->outputQueue) ==  0));
+}
+
+/**
+ * @brief Delete and free a source
+ * @param src an empty source
+ * 
+ * The caller MUST ensure this source is empty.
+ */
+void srcTCPss_free(struct srcTCPSS_t * src)
+{
+   assert(srcTCPss_isEmpty(src));
+
+   // Delete the outputQueue
+   printf_debug(DEBUG_TBD, "filePDU_free unavailable !");
+
+   // Free the structure
+   free(src);
 }

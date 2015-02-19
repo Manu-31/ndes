@@ -36,7 +36,6 @@ struct llSimplex_t * llSimplex_create(void * destination,
 				      double propagation)
 {
    struct llSimplex_t * result = (struct llSimplex_t *) sim_malloc(sizeof(struct llSimplex_t));
-   printf_debug(DEBUG_ALWAYS, "IN\n");
 
    result->destination = destination;
    result->destProcessPDU = destProcessPDU;
@@ -50,7 +49,6 @@ struct llSimplex_t * llSimplex_create(void * destination,
 
    result->idle = 1;
 
-   printf_debug(DEBUG_ALWAYS, "OUT\n");
    return result;
 }
 

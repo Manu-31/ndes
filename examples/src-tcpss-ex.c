@@ -3,9 +3,11 @@
  * @brief An example of src-tcpss usage
  *
  * This program simulates the transmission of a file through an ADSL
- * access link.
+ * access link. A very long RTT is used to show the slow start window
+ * increase.
  */
 #include <motsim.h>
+#include <event.h>
 #include <pdu-sink.h>
 #include <ll-simplex.h>
 #include <src-tcpss.h>
@@ -20,8 +22,13 @@
 #define ACCESS_LINK_THROUGHPUT    1000000
 #define ACCESS_LINK_TRANSMIT_TIME 0.00001
 
-#define RTT 0.020
+#define RTT 1.0
 #define MTU 1500
+
+void sendOneFile(struct srcTCPSS_t  * src)
+{
+   srcTCPss_sendFile(src, FILE_SIZE);
+}
 
 int main()
 {
@@ -50,6 +57,11 @@ int main()
 
    // Send a file
    srcTCPss_sendFile(src, FILE_SIZE);
+
+   // 
+   event_add((void (*)(void *data))sendOneFile, (void*)src, 0.20);
+   event_add((void (*)(void *data))sendOneFile, (void*)src, 100.0);
+
 
    motSim_runUntilTheEnd();
 
