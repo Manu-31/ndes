@@ -72,7 +72,7 @@ int main()
    event_add((void (*)(void *data))sendOneFile, (void*)src, 100.0);
 
    // Création d'un événement permettant de voir la fin
-   srcTCPss_addEOTEvent(src, event_create(afficheFin, NULL), 0.0));
+   srcTCPss_addEOTEvent(src, event_create(afficheFin, NULL, 0.0));
 
    motSim_runUntilTheEnd();
 
