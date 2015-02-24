@@ -64,4 +64,11 @@ int srcTCPss_isEmpty(struct srcTCPSS_t * src);
  */
 void srcTCPss_free(struct srcTCPSS_t * src);
 
+/**
+ * @brief Add an event to be run on EOT
+ * @param src is a poiter to the source
+ * @param ev is the event to schedule for EOT
+ */
+void srcTCPss_addEOTEvent(struct srcTCPSS_t * src, struct event_t * ev)
+
 #endif

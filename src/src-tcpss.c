@@ -13,6 +13,7 @@
 #include <event.h>
 #include <motsim.h>
 #include <file_pdu.h>
+#include <event-file.h>
 
 #define TCP_BASE_HEADER_SIZE 40
 
@@ -33,6 +34,8 @@ struct srcTCPSS_t {
    processPDU_t  destProcessPDU; //!< La fonction permettant de
 				 //!signaler à la destination la
 				 //!présence de la PDU
+  struct eventFile_t * EOTEventList; //!< List of events to run at the
+				  //!end of transmission
 };
 
 
@@ -60,7 +63,7 @@ struct srcTCPSS_t * srcTCPss_create(int MTU,
    result->destination = destination;
    result->destProcessPDU = destProcessPDU;
    result->outputQueue = filePDU_create(NULL, NULL);
-
+   result->EOTEventList = eventFile_create();
    return result;
 }
 
@@ -153,6 +156,7 @@ struct PDU_t * srcTCPss_getPDU(void * s)
 {
    struct srcTCPSS_t * src = (struct srcTCPSS_t *) s;
    struct PDU_t * result = NULL;
+   struct event_t * ev;
 
    printf_debug(DEBUG_SRC, "IN\n");
 
@@ -170,6 +174,13 @@ struct PDU_t * srcTCPss_getPDU(void * s)
         // size for the next transmission, if any
         src->windowSize += src->nbSentSegments;
         src->nbSentSegments = 0;
+
+        // Run any event in the list, if any.
+        // WARNING : this this the EOT, not the end of reception !
+        // You may need to wait for an extra RTT ...
+        while ((ev = eventFile_extract(src->EOTEventList)) != NULL) {
+           event_run(ev);
+	}
      }
      return result; 
   } else { // Should not occur ...
@@ -207,4 +218,14 @@ void srcTCPss_free(struct srcTCPSS_t * src)
 
    // Free the structure
    free(src);
+}
+
+/**
+ * @brief Add an event to be run on EOT
+ * @param src is a poiter to the source
+ * @param ev is the event to schedule for EOT
+ */
+void srcTCPss_addEOTEvent(struct srcTCPSS_t * src, struct event_t * ev)
+{
+   eventFile_insert(src->EOTEventList, ev);
 }

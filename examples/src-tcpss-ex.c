@@ -30,6 +30,14 @@ void sendOneFile(struct srcTCPSS_t  * src)
    srcTCPss_sendFile(src, FILE_SIZE);
 }
 
+/**
+ * @brief Affiche un message
+ */
+void afficheFin(void * data)
+{
+   printf_debug(DEBUG_ALWAYS, "End of Transmission\n");
+}
+
 int main()
 {
    struct srcTCPSS_t  * src;
@@ -63,6 +71,8 @@ int main()
    event_add((void (*)(void *data))sendOneFile, (void*)src, 0.20);
    event_add((void (*)(void *data))sendOneFile, (void*)src, 100.0);
 
+   // Création d'un événement permettant de voir la fin
+   srcTCPss_addEOTEvent(src, event_create(afficheFin, NULL), 0.0));
 
    motSim_runUntilTheEnd();
 
