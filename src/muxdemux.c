@@ -6,7 +6,7 @@
 #include <limits.h>   // UINT_MAX
 #include <muxdemux.h>
 #include <ndesObject.h>
-#include <ndesObjectFile.h>
+#include <ndesObjectList.h>
 
 /**
  * @brief A multiplexing sender
@@ -16,7 +16,7 @@ struct muxDemuxSender_t {
    void * destination;
    processPDU_t destProcessPDU;
 
-   struct ndesObjectFile_t * sapList; //<! Sorted in ascending identifier
+   struct ndesObjectList_t * sapList; //<! Sorted in ascending identifier
 };
 
 /**
@@ -84,7 +84,7 @@ struct muxDemuxSender_t * muxDemuxSender_create(void * destination,
 
    result->destination = destination;
    result->destProcessPDU = destProcessPDU;
-   result->sapList = ndesObjectFile_create(&muxDemuxSenderSAPType);
+   result->sapList = ndesObjectList_create(&muxDemuxSenderSAPType);
  
    return result;
 }
@@ -101,32 +101,32 @@ struct muxDemuxSenderSAP_t * muxDemuxSender_createNewSAP(struct muxDemuxSender_t
 {
    unsigned int nextSAPI = 1;
 
-   struct ndesObjectFileIterator_t *i;
+   struct ndesObjectListIterator_t *i;
    struct muxDemuxSenderSAP_t * s; //!< For iteration
    struct muxDemuxSenderSAP_t * p; //!< The SAP after which to insert
    struct muxDemuxSenderSAP_t * result = NULL;
 
    // If the chosen SAPI is non zero, we check for its availability,
    // else we search the next available value. 
-   i = ndesObjectFile_createIterator(sender->sapList);
-   s = (struct muxDemuxSenderSAP_t *)ndesObjectFile_iteratorGetNext(i);
+   i = ndesObjectList_createIterator(sender->sapList);
+   s = (struct muxDemuxSenderSAP_t *)ndesObjectList_iteratorGetNext(i);
    while (s != NULL) {
       // Looking for an available identifier
       if (s->identifier == nextSAPI) {
          if (nextSAPI == UINT_MAX) {
-            ndesObjectFile_deleteIterator(i);
+            ndesObjectList_deleteIterator(i);
             return NULL;
   	 }
          nextSAPI++;
       }
       // Aborting on "collisions"
       if ((newSAPI != 0) && (s->identifier == newSAPI)) {
-	 ndesObjectFile_deleteIterator(i);
+	 ndesObjectList_deleteIterator(i);
          return NULL;
       }
-      s = (struct muxDemuxSenderSAP_t *)ndesObjectFile_iteratorGetNext(i);
+      s = (struct muxDemuxSenderSAP_t *)ndesObjectList_iteratorGetNext(i);
    }
-   ndesObjectFile_deleteIterator(i);
+   ndesObjectList_deleteIterator(i);
    // The new SAP can be created
    if (newSAPI == 0) {
       newSAPI = nextSAPI;
@@ -142,19 +142,19 @@ struct muxDemuxSenderSAP_t * muxDemuxSender_createNewSAP(struct muxDemuxSender_t
 
    // Now we search for its position within the file
    p = NULL; // A priori it is the first
-   i = ndesObjectFile_createIterator(sender->sapList);
-   s = (struct muxDemuxSenderSAP_t *)ndesObjectFile_iteratorGetNext(i);
+   i = ndesObjectList_createIterator(sender->sapList);
+   s = (struct muxDemuxSenderSAP_t *)ndesObjectList_iteratorGetNext(i);
    while ((s != NULL) && (s->identifier < newSAPI)) {
       p=s;
-      s = (struct muxDemuxSenderSAP_t *)ndesObjectFile_iteratorGetNext(i);
+      s = (struct muxDemuxSenderSAP_t *)ndesObjectList_iteratorGetNext(i);
    } 
-   ndesObjectFile_deleteIterator(i);
+   ndesObjectList_deleteIterator(i);
 
    // Insertion
    if (p) {
-      ndesObjectFile_insertAfter(sender->sapList, p, result);
+      ndesObjectList_insertAfter(sender->sapList, p, result);
    } else {
-      ndesObjectFile_insert(sender->sapList, result);
+      ndesObjectList_insert(sender->sapList, result);
    }
    return result;
 }
@@ -257,7 +257,7 @@ struct PDUFilter_t * muxDemuxSender_createFilterFromSAP(struct muxDemuxSenderSAP
  * @brief A demultiplexing receiver
  */
 struct muxDemuxReceiver_t {
-   struct ndesObjectFile_t * sapList; //<! Sorted in ascending identifier
+   struct ndesObjectList_t * sapList; //<! Sorted in ascending identifier
 };
 
 /**
@@ -292,7 +292,7 @@ struct muxDemuxReceiver_t * muxDemuxReceiver_create()
 {
    struct muxDemuxReceiver_t * result = (struct muxDemuxReceiver_t *)sim_malloc(sizeof(struct muxDemuxReceiver_t ));
 
-   result->sapList = ndesObjectFile_create(&muxDemuxReceiverSAPType);
+   result->sapList = ndesObjectList_create(&muxDemuxReceiverSAPType);
  
    return result;
 }
@@ -311,7 +311,7 @@ struct muxDemuxReceiverSAP_t * muxDemuxReceiver_createNewSAP(struct muxDemuxRece
 {
    unsigned int nextSAPI = 1;
 
-   struct ndesObjectFileIterator_t * i;
+   struct ndesObjectListIterator_t * i;
    struct muxDemuxReceiverSAP_t * s; //!< For iteration
    struct muxDemuxReceiverSAP_t * p; //!< The SAP after which to insert
    struct muxDemuxReceiverSAP_t * result = NULL;
@@ -320,29 +320,29 @@ struct muxDemuxReceiverSAP_t * muxDemuxReceiver_createNewSAP(struct muxDemuxRece
 
    // If the chosen SAPI is non zero, we check for its availability,
    // else we search the next available value. 
-   i = ndesObjectFile_createIterator(receiver->sapList);
+   i = ndesObjectList_createIterator(receiver->sapList);
    printf_debug(DEBUG_MUX, "STEADY\n");
-   s = (struct muxDemuxReceiverSAP_t *)ndesObjectFile_iteratorGetNext(i);
+   s = (struct muxDemuxReceiverSAP_t *)ndesObjectList_iteratorGetNext(i);
    printf_debug(DEBUG_MUX, "GO\n");
    while (s != NULL) {
      printf_debug(DEBUG_MUX, "id %d\n", s->identifier);
       // Looking for an available identifier
       if (s->identifier == nextSAPI) {
          if (nextSAPI == UINT_MAX) {
-            ndesObjectFile_deleteIterator(i);
+            ndesObjectList_deleteIterator(i);
             return NULL;
   	 }
          nextSAPI++;
       }
       // Aborting on "collisions"
       if ((newSAPI != 0) && (s->identifier == newSAPI)) {
-	 ndesObjectFile_deleteIterator(i);
+	 ndesObjectList_deleteIterator(i);
          return NULL;
       }
-      s = (struct muxDemuxReceiverSAP_t *)ndesObjectFile_iteratorGetNext(i);
+      s = (struct muxDemuxReceiverSAP_t *)ndesObjectList_iteratorGetNext(i);
    }
    printf_debug(DEBUG_MUX, "DONE\n");
-   ndesObjectFile_deleteIterator(i);
+   ndesObjectList_deleteIterator(i);
    printf_debug(DEBUG_MUX, "Search over\n");
 
    // The new SAP can be created
@@ -364,22 +364,22 @@ struct muxDemuxReceiverSAP_t * muxDemuxReceiver_createNewSAP(struct muxDemuxRece
 
    // Now we search for its position within the file
    p = NULL; // A priori it is the first
-   i = ndesObjectFile_createIterator(receiver->sapList);
-   s = (struct muxDemuxReceiverSAP_t *)ndesObjectFile_iteratorGetNext(i);
+   i = ndesObjectList_createIterator(receiver->sapList);
+   s = (struct muxDemuxReceiverSAP_t *)ndesObjectList_iteratorGetNext(i);
    while ((s != NULL) && (s->identifier < newSAPI)) {
       p=s;
-      s = (struct muxDemuxReceiverSAP_t *)ndesObjectFile_iteratorGetNext(i);
+      s = (struct muxDemuxReceiverSAP_t *)ndesObjectList_iteratorGetNext(i);
    } 
-   ndesObjectFile_deleteIterator(i);
+   ndesObjectList_deleteIterator(i);
    printf_debug(DEBUG_MUX, "Ready to insert\n");
 
    // Insertion
    if (p) {
       printf_debug(DEBUG_MUX, "After\n");
-      ndesObjectFile_insertAfter(receiver->sapList, p, result);
+      ndesObjectList_insertAfter(receiver->sapList, p, result);
    } else {
       printf_debug(DEBUG_MUX, "First\n");
-      ndesObjectFile_insert(receiver->sapList, result);
+      ndesObjectList_insert(receiver->sapList, result);
    }
    printf_debug(DEBUG_MUX, "OUT\n");
 
@@ -412,7 +412,7 @@ int muxDemuxReceiver_processPDU(void * rcv,
    struct muxDemuxReceiver_t       * receiver = (struct muxDemuxReceiver_t    *)rcv;
    struct muxDemuxReceiverSAP_t    * s;
    struct muxDemuxEncaps_t         * encaps;
-   struct ndesObjectFileIterator_t * i;
+   struct ndesObjectListIterator_t * i;
    int sapi;
    struct PDU_t * pdu;
    int result;
@@ -434,12 +434,12 @@ int muxDemuxReceiver_processPDU(void * rcv,
    sapi = encaps->sapi;
 
    // Then we need to find the output SAP
-   i = ndesObjectFile_createIterator(receiver->sapList);
-   s = (struct muxDemuxReceiverSAP_t *)ndesObjectFile_iteratorGetNext(i);
+   i = ndesObjectList_createIterator(receiver->sapList);
+   s = (struct muxDemuxReceiverSAP_t *)ndesObjectList_iteratorGetNext(i);
    while ((s != NULL) && (s->identifier != sapi)) {
-      s = (struct muxDemuxReceiverSAP_t *)ndesObjectFile_iteratorGetNext(i);
+      s = (struct muxDemuxReceiverSAP_t *)ndesObjectList_iteratorGetNext(i);
    } 
-   ndesObjectFile_deleteIterator(i);
+   ndesObjectList_deleteIterator(i);
 
    if ((s == NULL) || (s->identifier != sapi)) {
       motSim_error(MS_WARN, "SAPI not found\n");

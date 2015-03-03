@@ -29,7 +29,7 @@
 #endif
 
 
-#include <ndesObjectFile.h>
+#include <ndesObjectList.h>
 
 /**
  * @brief définition d'une entrée dans les log
@@ -92,7 +92,7 @@ struct ndesLogEntry_t * ndesLogEntry_create(struct ndesObject_t * object,
  * On peut en avoir plusieurs si besoin est.
  */
 struct ndesLog_t {
-   struct ndesObjectFile_t * journal; //< Liste des événements
+   struct ndesObjectList_t * journal; //< Liste des événements
 } ndesLog_t;
 
 /**
@@ -125,7 +125,7 @@ struct ndesLog_t * ndesLog_create()
    result = (struct ndesLog_t *)sim_malloc(sizeof(struct ndesLog_t));
  
    // Le journal est une liste de logEntry
-   result->journal = ndesObjectFile_create(&ndesLogEntryType);
+   result->journal = ndesObjectList_create(&ndesLogEntryType);
 
    return result;
 };
@@ -146,7 +146,7 @@ void ndesLog_logLine(struct ndesObject_t * ndesObject, char * line)
    struct ndesLogEntry_t * le;
 
    le = ndesLogEntry_create(ndesObject, line);
-   ndesObjectFile_insert(ndesLog->journal, le);
+   ndesObjectList_insert(ndesLog->journal, le);
 }
 
 /**
@@ -175,17 +175,17 @@ void ndesLog_logLineF(struct ndesObject_t * ndesObject, char * fmt, ...)
  */
 int ndesLog_dump(char * fileName)
 {
-   struct ndesObjectFileIterator_t * ofi;
+   struct ndesObjectListIterator_t * ofi;
    struct ndesObject_t             * obj;
    struct ndesLogEntry_t           * le;
 
-   ofi = ndesObjectFile_createIterator(ndesLog->journal);
-   while ((obj = ndesObjectFile_iteratorGetNext(ofi))) {
+   ofi = ndesObjectList_createIterator(ndesLog->journal);
+   while ((obj = ndesObjectList_iteratorGetNext(ofi))) {
       assert(ndesObject_getType(obj) == &ndesLogEntryType);
       le = ndesObject_getPrivate(obj);
       printf("[LOG] %f %d \"%s\" !\n", le->date, ndesObject_getId(le->object), le->msg);
    }
-   ndesObjectFile_deleteIterator(ofi);
+   ndesObjectList_deleteIterator(ofi);
    
    return -1;
 }

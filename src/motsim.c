@@ -6,7 +6,7 @@
 #include <time.h>
 #include <unistd.h>    // alarm
 
-#include <event-file.h>
+#include <event-list.h>
 #include <pdu.h>
 #include <log.h>
 
@@ -30,7 +30,7 @@ struct motsim_t {
    time_t               actualStartTime;
    motSimDate_t               currentTime;
    motSimDate_t               finishTime; // Heure simulée de fin prévue
-   struct eventFile_t * events;
+   struct eventList_t * events;
    int                  nbInsertedEvents;
    int                  nbRanEvents;
 
@@ -63,7 +63,7 @@ void motSim_periodicMessage(void * foo)
 	    __motSim->currentTime,
 	    __motSim->nbInsertedEvents,
 	    __motSim->nbRanEvents,
-	    eventFile_length(__motSim->events));
+	    eventList_getLength(__motSim->events));
      fflush(stdout);
 }
 
@@ -104,7 +104,7 @@ void motSim_create()
    __motSim->currentTime = 0.0;
 
    printf_debug(DEBUG_MOTSIM, "Initialisation du simulateur ...\n");
-   __motSim->events = eventFile_create();
+   __motSim->events = eventList_create();
    __motSim->nbInsertedEvents = 0;
    __motSim->nbRanEvents = 0;
    __motSim->resetClient = NULL;
@@ -149,15 +149,31 @@ void motSim_create()
    printf_debug(DEBUG_MOTSIM, "Simulateur pret ...\n");
 }
 
-void motSim_addEvent(struct event_t * event)
+/**
+ * @brief Schedule an event to be run at a given date
+ * @param event a (non NULL) pointer to an initialised event
+ * @param date a (non past) date to run the event
+ */
+void motSim_scheduleEvent(struct event_t * event, motSimDate_t date)
 {
  
-  printf_debug(DEBUG_EVENT, "New event (%p) at %6.3f (%d ev)\n", event, event_getDate(event), __motSim->nbInsertedEvents);
-   assert(__motSim->currentTime <= event_getDate(event));
+   printf_debug(DEBUG_EVENT, "New event (%p) at %6.3f (%d ev)\n", event, date, __motSim->nbInsertedEvents);
+   assert(__motSim->currentTime <= date);
 
-   eventFile_insert(__motSim->events, event);
+   eventList_insert(__motSim->events, event, date);
    __motSim->nbInsertedEvents++;
  
+}
+
+/**
+ * @brief Create then schedule a new event
+ * @param run Event function
+ * @param data a pointer to use as argument for run
+ * @param date The (future) date to execute event
+ */
+void motSim_scheduleNewEvent(void (*run)(void *data), void * data, motSimDate_t date)
+{
+  motSim_scheduleEvent(event_create(run, data), date);
 }
 
 void motSim_runNevents(int nbEvents)
@@ -168,7 +184,7 @@ void motSim_runNevents(int nbEvents)
       __motSim->actualStartTime = time(NULL);
    }
    while (nbEvents) {
-      event = eventFile_extract(__motSim->events);
+      event = eventList_extractFirst(__motSim->events);
       if (event) {
          nbEvents--;
          printf_debug(DEBUG_EVENT, "next event (%p) at %f\n", event, event_getDate(event));
@@ -193,13 +209,14 @@ void motSim_runUntilTheEnd()
       __motSim->actualStartTime = time(NULL);
    }
    while (1) {
-      event = eventFile_extract(__motSim->events);
+      event = eventList_extractFirst(__motSim->events);
       if (event) {
-         printf_debug(DEBUG_EVENT, "next event at %f\n", event_getDate(event));
+         printf_debug(DEBUG_EVENT, "next event (out of %d) at %f\n", eventList_getLength(__motSim->events), event_getDate(event));
          assert(__motSim->currentTime <= event_getDate(event));
          __motSim->currentTime = event_getDate(event);
          event_run(event);
          __motSim->nbRanEvents ++;
+         printf_debug(DEBUG_EVENT, "now %d events left\n", eventList_getLength(__motSim->events));
       } else {
          printf_debug(DEBUG_MOTSIM, "no more event !\n");
          return ;
@@ -238,10 +255,10 @@ void motSim_runUntil(motSimDate_t date)
    if (!__motSim->nbRanEvents) {
       __motSim->actualStartTime = time(NULL);
    }
-   event = eventFile_nextEvent(__motSim->events);
+   event = eventList_nextEvent(__motSim->events);
 
    while ((event) && (event_getDate(event) <= date)) {
-      event = eventFile_extract(__motSim->events);
+      event = eventList_extractFirst(__motSim->events);
 
       printf_debug(DEBUG_EVENT, "next event at %f\n", event_getDate(event));
       assert(__motSim->currentTime <= event_getDate(event));
@@ -255,7 +272,7 @@ afficher le message toutes les
 
    Bof : moins on en rajoute à chaque event, mieux c'est !
       */
-      event = eventFile_nextEvent(__motSim->events);
+      event = eventList_nextEvent(__motSim->events);
    }
 }
 
@@ -268,7 +285,7 @@ void motSim_purge()
    int warnDone = 0;
    printf_debug(DEBUG_MOTSIM, "about to purge events\n");
 
-   event = eventFile_extract(__motSim->events);
+   event = eventList_extractFirst(__motSim->events);
 
    while (event){
 
@@ -281,7 +298,7 @@ void motSim_purge()
          printf_debug(DEBUG_TBD, "Some events have been purged !!\n");
       };
       __motSim->nbRanEvents ++;
-      event = eventFile_extract(__motSim->events);
+      event = eventList_extractFirst(__motSim->events);
    }
    printf_debug(DEBUG_MOTSIM, "no more event\n");
 
@@ -342,21 +359,13 @@ motSimDate_t motSim_getCurrentTime()
    return __motSim->currentTime;
 };
 
-/*
- * Initialisation puis insertion d'un evenement
- */
-void motSim_insertNewEvent(void (*run)(void *data), void * data, motSimDate_t date)
-{
-  motSim_addEvent(event_create(run, data, date));
-}
-
 void motSim_printStatus()
 {
    printf("[MOTSI] Date = %f\n", __motSim->currentTime);
    printf("[MOTSI] Events : %ld created (%ld m + %ld r)/%ld freed\n", 
 	  event_nbCreate, event_nbMalloc, event_nbReuse, event_nbFree);
    printf("[MOTSI] Simulated events : %d in, %d out, %d pr.\n",
-	  __motSim->nbInsertedEvents, __motSim->nbRanEvents, eventFile_length(__motSim->events));
+	  __motSim->nbInsertedEvents, __motSim->nbRanEvents, eventList_getLength(__motSim->events));
    printf("[MOTSI] PDU : %ld created (%ld m + %ld r)/%ld released\n",
 	  probe_nbSamples(PDU_createProbe),
 	  probe_nbSamples(PDU_mallocProbe),

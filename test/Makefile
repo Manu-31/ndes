@@ -8,6 +8,7 @@ TESTS = generators-0 generators-1 \
 	muxdemux rr-mux \
 	drr \
 	source-1 source-2 \
+	event-test
 #	debits \
 #	muxfcfs-1 \
 #	intconf
@@ -19,6 +20,9 @@ all : $(TESTS)
 
 tests :  $(TESTS)
 	./run-tests.sh $(TESTS)
+
+event-test : event-test.o ../$(SRC_DIR)/libndes.a
+	$(CC) event-test.o -o event-test $(LDFLAGS)
 
 source-1 : source-1.o ../$(SRC_DIR)/libndes.a
 	$(CC) source-1.o -o source-1 $(LDFLAGS)

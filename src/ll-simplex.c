@@ -103,7 +103,7 @@ void llSimplex_endOfTransmission(void * l)
 
    // On prépare son arrivée
    printf_debug(DEBUG_PDU, "On prepare la fin de propagation a %lf\n", motSim_getCurrentTime() + lls->propagation);
-   event_add(llSimplex_endOfPropagation,
+   motSim_scheduleNewEvent(llSimplex_endOfPropagation,
 	     l,
 	     motSim_getCurrentTime() + lls->propagation);
 
@@ -142,7 +142,7 @@ int llSimplex_processPDU(void * l,
             lls->pdu = pdu; 
             printf_debug(DEBUG_PDU, "On prepare la fin de transmission a %lf\n",
 		      motSim_getCurrentTime() + PDU_size(pdu)*8.0/lls->throughput);
-            event_add(llSimplex_endOfTransmission,
+         motSim_scheduleNewEvent(llSimplex_endOfTransmission,
    		l, 
 		motSim_getCurrentTime() + PDU_size(pdu)*8.0/lls->throughput);
 	 } else {

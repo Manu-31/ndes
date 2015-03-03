@@ -7,6 +7,249 @@
 %------------------------------------------------------------------------
 %
 %------------------------------------------------------------------------
+\subsection{Gestion des événements}
+
+   La gestion des événements est naturellement un point
+particulièrement sensible dans un simulateur à événements, même s'il
+sont discrets ! {\sc Ndes} se fonde pour le moment sur une vieille
+cochonnerie tout droit sortie de mes projets d'étudiant (j'ai été
+diplômé, si ça peut vous rassurer). Elle est décrite dans {\tt event.h}
+et codée dans {\tt event.c}.
+
+   Les listes d'événements sont également un élément clef, car un
+événement est presque toujours présent dans une (et une seule) liste.
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Caractéristiques principales d'un événement}
+
+   Un événement sert à mettre en \oe{}uvre une action dans la
+simulation. Il est donc caractérisé par une fonction et un
+pointeur. L'exécution d'un événement consiste alors en l'invocation de
+la fonction avec le pointeur comme paramètre.
+
+   Un événement est également caractérisé par une date, mais celle-ci
+n'est pas systématiquement significative.
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Les listes d'événements}
+
+   Les listes d'événements sont les structures dans lesquelles seront
+systématiquement placés ces derniers. Pour des raisons de simplicité,
+il n'ya qu'un type de liste, mais il y a deux façons de l'utiliser :
+
+\begin{itemize}
+   \item Les listes chronologiques sont telles que tous les événements
+     contenus sont dans l'ordre croissant des dates.
+   \item Dans les listes non triées les événements sont insérés les
+     uns après les autres inépendament de leurs dates.
+\end{itemize}
+
+   Puisqu'il n'y a qu'un type, c'est au programmeur de veiller à ce
+que l'utilisation d'une liste soit cohérente.
+
+   Les listes d'événements sont définies dans {\tt event-list.h} et
+implantées dans {\tt event-list.c}.  
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Création d'un événement}
+ 
+   On peut créer un événement avec la fonction suivante 
+
+\index{event\_create}
+\begin{verbatim}
+struct event_t * event_create(void (*run)(void *data),
+			      void * data);
+\end{verbatim}
+
+   Attention, l'événement ne sera exécuté que si il est placé dans la
+file d'attente du simulateur. Pour cela, il faut utiliser la fonction
+{\tt motSim\_scheduleEvent}. 
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Insertion d'un événement dans une liste chronologique}
+
+   Un événement peut donc être placé dans une liste chronologique
+grâce à la fonction suivante
+
+\index{eventList\_insert}
+\begin{verbatim}
+void eventList_insert(struct eventList_t * list,
+                      struct event_t * event,
+                      motSimDate_t date);
+\end{verbatim}
+
+   Si la liste passée en paramètre est initialisée et ordonnée de
+façon chronologique, alors l'événement \lstinline!event! y est inséré
+chronologiquement avec la date \lstinline!date!.
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Insertion d'un événement dans une liste quelconque}
+
+   Si une liste n'est pas nécessairement chronologique, on peut y
+insérer des événements en début de liste ou en fin de liste. Pour
+cela, on dispose des deux fonctions suivantes
+
+\index{eventList\_add}
+\index{eventList\_append}
+\begin{verbatim}
+void eventList_add(struct eventList_t * file, struct event_t * event);
+void eventList_append(struct eventList_t * list, struct event_t * event);
+\end{verbatim}
+
+  La première ajoute l'événement en début de liste, et la seconde
+l'ajoute en fin de liste.
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Création d'un événement périodique}
+
+   Certains événements se reproduisent périodiquement, il est alors
+nécessaire d'utiliser, dans le code de traitement de l'événement, la
+fonction {\tt event\_add}. Une autre solution consiste à utiliser
+l'une des fonctions suivantes 
+
+\index{event\_periodicCreate}
+\index{event\_periodicAdd}
+\begin{verbatim}
+struct event_t * event_PeriodicCreate(void (*run)(void *data),
+			      void * data,
+			      double date,
+		              double period);
+void event_periodicAdd(void (*run)(void *data),
+		       void * data,
+		       double date,
+		       double period);
+
+\end{verbatim}
+
+   L'événement sera alors exécuté de façon périodique à partir de la
+date fournie en paramètre.
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Insertion d'un événement dans le simulateur}
+
+   Un événement doit être inséré dans le simulateur afin d'être
+finalement exécuté à la date souhaitée. Cette programmation se fait en
+insérant l'événement en question dans la liste chronologique des
+événements du simulateur.
+
+   Afin de ne pas manipuler directement cette liste, on utilisera la
+fonction suivante
+
+\index{motSim\_scheduleEvent}
+\begin{verbatim}
+void motSim_scheduleEvent(struct event_t * event, motSimDate_t date);
+\end{verbatim}
+
+   En fait, cette fonction invoque la fonction
+\lstinline!eventList_insert()! avec comme premier paramètre la liste
+des événements du simulateur.
+
+   Attention, il est interdit d'insérer un événement situé dans le
+passé !
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Exécution d'un événement ou d'une liste d'événements}
+
+   Un  événement est exécuté au travers de la fontion suivante
+
+\index{event\_run}
+\begin{verbatim}
+void event_run(struct event_t * event);
+\end{verbatim}
+
+   Attention, l'événemenent, une fois exécuté, est détruit.
+
+   Une liste d'événements est exécutée de façon atomique (du point de
+vue du système simulé) par la fonction
+
+\index{eventList\_runList}
+\begin{verbatim}
+void eventList_runList(struct eventList_t * list);
+\end{verbatim}
+
+   Les événements sont exécutés dans l'ordre dans lequel ils
+apparaissent dans la liste, et ceux indépendament de leur date. Si la
+liste a été construite dans l'ordre chronologique, alors ils seront
+exécutés dans cet ordre, mais sans lien avec l'horloge du
+simulateur. Cette dernière ne progresse donc pas, c'est pour cela que
+je dis que cette exécution est atomique : rien d'autre n'évolue dans
+le simulateur durant cette exécution.
+
+   Si la liste a été construite avec les fonctions {\tt
+eventList\_add} et {\tt evenList\_append}, alors elle sera exécutée
+dans l'ordre correspondant.
+
+%........................................................................
+%
+%........................................................................
+\subsubsection{Que dois-je utiliser ?}
+
+   Tout ça a certainement l'air un peu tordu ! J'avoue avoir moi-même
+du mal, \ldots Que faut-il donc en retenir ?
+
+   L'utilisateur n'a pas à se préoccuper de tout ça, c'est le premier
+point, et il est simple.
+
+   En ce qui concerne le programmeur, il y a en gros deux occasions de
+jouer avec les événements.
+
+%
+%
+%
+\paragraph{Créer des événements datés}
+
+   Lorsque l'on a besoin de créer un événement qui devra être exécuté
+à une date future connue, on utilisera la fonction {\tt
+  motSim\_scheduleEvent} ou la fonction {\tt
+  motSim\_scheduleNewEvent}, et on n'a plus à se préoccuper de rien
+puisque l'événement sera placé dans la file, exécuté à la bonne date,
+puis détruit. 
+
+%
+%
+%
+\paragraph{Créer des événements liés entre eux}
+
+   Dans certaines situations, il peut être nécessaire de déclencher
+l'exécution d'un ou plusieurs événement(s) lorsqu'une situation
+particulière apparait. Bien sûr, si la date d'apparition de cette
+situation est connue, il suffit de créer un ou plusieurs événements
+datés.
+
+   Si la date n'est pas connue, on procèdera de la façon suivante.
+
+\begin{enumerate}
+   \item On crée une liste d'événements vide grâce à la fonction
+     \lstinline!eventList_create!.
+   \item On insère dans cette liste chacun des événements qui devront
+     être exécutés. On utilise pour cela la fonction
+     \lstinline!eventList_append! et il est inutile d'associer une date
+     aux événements. 
+   \item Lorsque la condition est vérifiée et que les événements
+     doivent être exécutés, on utilise la fonction
+     \lstinline!eventList_runList!. Les événements seront exécutés
+     dans l'ordre de leur insertion dans la file.
+\end{enumerate}
+
+%------------------------------------------------------------------------
+%
+%------------------------------------------------------------------------
 \subsection{Gestion mémoire}
 
    L'allocation de mémoire peut s'avérer problématique, aussi la
@@ -46,67 +289,4 @@ définies dans {\tt motsim.h} parmi lesquelles
 
    Les mécanismes de débogage sont activés par la définition de la
 macro {\tt DEBUG\_NDES}.
-
-%------------------------------------------------------------------------
-%
-%------------------------------------------------------------------------
-\subsection{Gestion des événements}
-
-   Elle est décrite dans {\tt event.h} et codée dans {\tt event.c}.
-
-%........................................................................
-%
-%........................................................................
-\subsubsection{Création d'un événement}
- 
-   On peut créer un événement avec la fonction suivante 
-
-\index{event\_create}
-\begin{verbatim}
-struct event_t * event_create(void (*run)(void *data),
-			      void * data,
-			      double date);
-\end{verbatim}
-
-   Attention, l'événement ne sera exécuté que si il est placé dans la
-file d'attente du simulateur. Pour cela, il faut utiliser la fonction
-{\tt motSim\_addEvent}. 
-
-   On peut créer un événement et l'insérer immédiatement dans cette
-file grâce à la fonction
-
-\index{event\_add}
-\begin{verbatim}
-void event_add(void (*run)(void *data),
-	       void * data,
-	       double date);
-\end{verbatim}
-
-%........................................................................
-%
-%........................................................................
-\subsubsection{Création d'un événement périodique}
-
-   Certains événements se reproduisent périodiquement, il est alors
-nécessaire d'utiliser, dans le code de traitement de l'événement, la
-fonction {\tt event\_add}. Une autre solution consiste à utiliser
-l'une des fonctions suivantes 
-
-\index{event\_periodicCreate}
-\index{event\_periodicAdd}
-\begin{verbatim}
-struct event_t * event_PeriodicCreate(void (*run)(void *data),
-			      void * data,
-			      double date,
-		              double period);
-void event_periodicAdd(void (*run)(void *data),
-		       void * data,
-		       double date,
-		       double period);
-
-\end{verbatim}
-
-   L'événement sera alors exécuté de façon périodique à partir de la
-date fournie en paramètre.
-
 
