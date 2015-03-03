@@ -124,11 +124,11 @@ void srvGen_startService(struct srvGen_t * srv, struct PDU_t * pdu)
 
    printf_debug(DEBUG_SRV, " PDU %d from %6.3f to %6.3f\n", PDU_id(pdu), motSim_getCurrentTime(), date);
 
-   // On crée un événement pour cette date
-   event = event_create((eventAction_t)srvGen_terminateProcess, srv, date);
+   // On crée un événement
+   event = event_create((eventAction_t)srvGen_terminateProcess, srv);
 
-   // On ajoute cet événement au simulateur
-   motSim_addEvent(event);
+   // On ajoute cet événement au simulateur pour cette date
+   motSim_scheduleEvent(event, date);
 }
 
 /**

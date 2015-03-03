@@ -8,7 +8,7 @@
 
 #include <pdu.h>
 #include <ndesObject.h>
-#include <ndesObjectFile.h>
+#include <ndesObjectList.h>
 #include <pdu-filter.h>
 
 /**

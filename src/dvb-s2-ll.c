@@ -316,7 +316,7 @@ void DVBS2ll_sendPDU(struct DVBS2ll_t * dvbs2ll, struct PDU_t * pdu)
 		motSim_getCurrentTime(), pdu?PDU_size(pdu):0, bitLength/8, mc, transmissionTime * 1000.0);
 
    /* Au bout d'un temps d'émission, le support est libre */
-   motSim_insertNewEvent((eventAction_t)DVBS2ll_endTransmission, dvbs2ll,
+   motSim_scheduleNewEvent((eventAction_t)DVBS2ll_endTransmission, dvbs2ll,
 			 motSim_getCurrentTime() + transmissionTime);
 
    /* Au bout d'un temps d'émission plus propagation, le récepteur reçoit */

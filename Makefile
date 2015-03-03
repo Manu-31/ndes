@@ -18,6 +18,9 @@ export LDFLAGS=-g  -L../$(SRC_DIR) -lndes -lm
 # Génération d'une librairie avec les log intégrés
 #export CFLAGS +=  -DNDES_USES_LOG
 
+# En cours de réécriture des événements
+#export CFLAGS += -DEVENTS_ARE_NDES_OBJECTS
+
 default : src 
 
 all : src tests examples doc 

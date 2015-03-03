@@ -284,11 +284,11 @@ void PDUSource_buildNewPDU(struct PDUSource_t * source)
       printf_debug(DEBUG_SRC, " next PDU %d (size %u) created at %6.3f\n",  
                 PDU_id(source->nextPdu), size,motSim_getCurrentTime());
 
-      // On crée un événement pour cette date
-      event = event_create((eventAction_t)PDUSource_buildNewPDU, source, date);
+      // On crée un événement
+      event = event_create((eventAction_t)PDUSource_buildNewPDU, source);
 
-      // On ajoute cet événement au simulateur
-      motSim_addEvent(event);
+      // On ajoute cet événement au simulateur  pour cette date
+      motSim_scheduleEvent(event, date);
    } else {
      printf_debug(DEBUG_SRC, " Aborted (too late) !\n");
    }

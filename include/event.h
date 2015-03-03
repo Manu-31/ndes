@@ -11,6 +11,17 @@
 
 #include <motsim.h>
 
+#ifdef EVENTS_ARE_NDES_OBJECTS
+#include <ndesObject.h>
+
+struct event_t;
+
+declareObjectFunctions(event);
+
+struct ndesObjectType_t eventType;
+
+#else
+
 struct event_t {
    int    type;
    motSimDate_t period;  // Pour les événements périodiques
@@ -22,6 +33,8 @@ struct event_t {
    struct event_t * prev;
    struct event_t * next;
 };
+
+#endif
 
 #define EVENT_PERIODIC 0x00000001
 
@@ -37,37 +50,42 @@ typedef void (*eventAction_t)(void *);
 
 /**
  * @brief  Création d'un événement 
- * Cet événement devra être exécuté à la date passée en
- * paramètre.
- * A cette date, la fonction 'run' sera invoquée avec le
- * paramêtre 'data' en paramètre.
+ * @param run La fonction à invoquer lors de l'occurence de l'événement
+ * @param data Un pointeur (ou NULL) passé en paramètre à run
+ * @return L'événement créé
+ *
  * ATTENTION, il faut l'insérer dans la liste du simulateur, sinon
  * l'événement ne sera jamais exécuté. Pour cela, on utilisera la
- * fonction motSim_addEvent.
+ * fonction motSim_scheduleEvent.
  *
- * @param run La fonction à invoquer lors de l'occurence de l'événement
- * @param data Un pointeur (ou NULL) passé en paramètre à run
- * @param date Date à laquelle exécuter l'événement
- * @return L'événement créé
  */
 struct event_t * event_create(void (*run)(void *data),
-			      void * data,
-			      motSimDate_t date);
+			      void * data);
 
 /**
- * @brief  Création et insertion d'un événement 
- * Cet événement devra être exécuté à la date passée en
- * paramètre.
- * A cette date, la fonction 'run' sera invoquée avec le
- * paramêtre 'data' en paramètre.
- *
- * @param run La fonction à invoquer lors de l'occurence de l'événement
- * @param data Un pointeur (ou NULL) passé en paramètre à run
- * @param date Date à laquelle exécuter l'événement
+ * @brief read the date for an event
+ * @param event a (non NULL) pointer to the event to read
+ * @return the date of the event
  */
-void event_add(void (*run)(void *data),
-	       void * data,
-	       motSimDate_t date);
+motSimDate_t event_getDate(struct event_t * event);
+
+/**
+ * @brief change the date for an event
+ * @param event a pointer to the event to update
+ * @param date the new date of the event
+ *
+ * No control is made on the date, it can be either in the past or the
+ * future.
+ */
+void event_setDate(struct event_t * event, motSimDate_t date);
+
+/**
+ * @brief Run an event, whatever the date
+ * @param event an event to run
+ *
+ * If the event is periodic, it is rescheduled an not destroyed.
+ */
+void event_run(struct event_t * event);
 
 /**
  * @brief  Création d'un événement périodique
@@ -77,7 +95,7 @@ void event_add(void (*run)(void *data),
  * paramêtre 'data' en paramètre.
  * ATTENTION, il faut l'insérer dans la liste du simulateur, sinon
  * l'événement ne sera jamais exécuté. Pour cela, on utilisera la
- * fonction motSim_addEvent.
+ * fonction motSim_scheduleEvent.
  *
  * @param run La fonction à invoquer lors de l'occurence de l'événement
  * @param data Un pointeur (ou NULL) passé en paramètre à run
@@ -105,9 +123,5 @@ void event_periodicAdd(void (*run)(void *data),
 		       void * data,
 		       motSimDate_t date,
 		       motSimDate_t period);
-
-motSimDate_t event_getDate(struct event_t * event);
-
-void event_run(struct event_t * event);
 
 #endif

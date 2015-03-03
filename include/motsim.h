@@ -1,4 +1,5 @@
-/** @file motsim.c
+/**
+ * @file motsim.c
  * @brief Le moteur de simulation.
  * 
  *   Puisqu'il n'y aura jamais qu'un seul moteur de simulation et
@@ -55,15 +56,20 @@ void motsim_addToResetList(void * data, void (*resetFunc)(void * data));
  */
 void motSim_reset();
 
-/*
- * Insertion d'un evenement initialise
+/**
+ * @brief Schedule an event to be run at a given date
+ * @param event a (non NULL) pointer to an initialised event
+ * @param date a (non past) date to run the event
  */
-void motSim_addEvent(struct event_t * event);
+void motSim_scheduleEvent(struct event_t * event, motSimDate_t date);
 
-/*
- * Initialisation puis insertion d'un evenement
+/**
+ * @brief Create then schedule a new event
+ * @param run Event function
+ * @param data a pointer to use as argument for run
+ * @param date The (future) date to execute event
  */
-void motSim_insertNewEvent(void (*run)(void *data), void * data, motSimDate_t date);
+void motSim_scheduleNewEvent(void (*run)(void *data), void * data, motSimDate_t date);
 
 void motSim_runNevents(int nbEvents);
 
@@ -157,7 +163,7 @@ static unsigned long debug_mask __attribute__ ((unused)) = 0x00000000
   //     | DEBUG_OBJECT
   //     | DEBUG_MALLOC    // L'utilisation de malloc
        | DEBUG_TBD       // Le code pas implanté
-  //       | DEBUG_ALWAYS
+  //     | DEBUG_ALWAYS
   ;
 
 #else

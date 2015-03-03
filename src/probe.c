@@ -7,6 +7,9 @@
  * De plus, lors du reset, on libère la mémoire, ce qui prend du temps
  * et nécessite de les réallouer pour la simulation suivante. On
  * pourrait les conserver, non ?
+ *
+ * La gestion périodique est faite sans utiliser les événements
+ * périodiques, c'est certainement à revoir, ...
  */
 
 
@@ -230,10 +233,9 @@ void probe_periodicReset(struct probe_t * pr)
    probe_reset(pr->data.periodic->data);
 
    // On déclanche un échantillon du cumul à 0 + t
-
-   ev = event_create((void (*)(void *))probe_scheduleNextEvent, pr, pr->period);
+   ev = event_create((void (*)(void *))probe_scheduleNextEvent, pr);
    printf_debug(DEBUG_PROBE, "premiere moyenne a %f ms pour %s\n", pr->period, pr->name);
-   motSim_addEvent(ev);
+   motSim_scheduleEvent(ev, pr->period);
 }
 
 void probe_timeSliceReset(struct probe_t * pr)
@@ -247,9 +249,9 @@ void probe_timeSliceReset(struct probe_t * pr)
    probe_reset(pr->data.timeSlice->bwProbe);
 
    // On déclanche un échantillon du cumul à 0 + t
-   ev = event_create((void (*)(void *))probe_scheduleNextEvent, pr, pr->period);
+   ev = event_create((void (*)(void *))probe_scheduleNextEvent, pr);
    printf_debug(DEBUG_PROBE, "premiere moyenne a %f ms(ev %p)\n", pr->period, ev);
-   motSim_addEvent(ev);
+   motSim_scheduleEvent(ev, pr->period);
 }
 
 /*
@@ -356,9 +358,9 @@ struct probe_t * probe_periodicCreate(double t)
    result->period = t;
 
    // On déclanche un échantillon du cumul à 0 + t
-   ev = event_create((void (*)(void *))probe_scheduleNextEvent, result, result->period);
+   ev = event_create((void (*)(void *))probe_scheduleNextEvent, result);
    printf_debug(DEBUG_PROBE, "premiere moyenne a %f ms(ev %p) pour \"%s\"\n", result->period, ev, result->name);
-   motSim_addEvent(ev);
+   motSim_scheduleEvent(ev, result->period);
 
    return result;
 }
@@ -465,8 +467,8 @@ void probe_scheduleNextEvent(struct probe_t * pr)
    }
 
    // On programme la prochaine
-   motSim_addEvent(event_create((void (*)(void *))probe_scheduleNextEvent, pr,
-				motSim_getCurrentTime() + pr->period));
+   motSim_scheduleEvent(event_create((void (*)(void *))probe_scheduleNextEvent, pr),
+			motSim_getCurrentTime() + pr->period);
 
 }
 
@@ -488,9 +490,9 @@ struct probe_t * probe_createTimeSliceAverage(double t)
    result->data.timeSlice->bwProbe = probe_createExhaustive();
 
    // On déclanche un échantillon du cumul à 0 + t
-   ev = event_create((void (*)(void *))probe_scheduleNextEvent, result, result->period);
+   ev = event_create((void (*)(void *))probe_scheduleNextEvent, result);
    printf_debug(DEBUG_PROBE, "premiere moyenne a %f ms(ev %p)\n", result->period, ev);
-   motSim_addEvent(ev);
+   motSim_scheduleEvent(ev, result->period);
 
    return result;
 }
