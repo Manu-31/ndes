@@ -68,11 +68,11 @@ int main()
 
    // We will later send two other files to test "persistent
    // connections"
-   event_add((void (*)(void *data))sendOneFile, (void*)src, 0.20);
-   event_add((void (*)(void *data))sendOneFile, (void*)src, 100.0);
+   motSim_scheduleNewEvent((void (*)(void *data))sendOneFile, (void*)src, 0.20);
+   motSim_scheduleNewEvent((void (*)(void *data))sendOneFile, (void*)src, 100.0);
 
    // Création d'un événement permettant de voir la fin
-   srcTCPss_addEOTEvent(src, event_create(afficheFin, NULL, 0.0));
+   srcTCPss_addEOTEvent(src, event_create(afficheFin, NULL));
 
    motSim_runUntilTheEnd();
 

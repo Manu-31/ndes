@@ -13,7 +13,7 @@
 #include <event.h>
 #include <motsim.h>
 #include <file_pdu.h>
-#include <event-file.h>
+#include <event-list.h>
 
 #define TCP_BASE_HEADER_SIZE 40
 
@@ -34,7 +34,7 @@ struct srcTCPSS_t {
    processPDU_t  destProcessPDU; //!< La fonction permettant de
 				 //!signaler à la destination la
 				 //!présence de la PDU
-  struct eventFile_t * EOTEventList; //!< List of events to run at the
+  struct eventList_t * EOTEventList; //!< List of events to run at the
 				  //!end of transmission
 };
 
@@ -63,7 +63,7 @@ struct srcTCPSS_t * srcTCPss_create(int MTU,
    result->destination = destination;
    result->destProcessPDU = destProcessPDU;
    result->outputQueue = filePDU_create(NULL, NULL);
-   result->EOTEventList = eventFile_create();
+   result->EOTEventList = eventList_create();
    return result;
 }
 
@@ -156,7 +156,6 @@ struct PDU_t * srcTCPss_getPDU(void * s)
 {
    struct srcTCPSS_t * src = (struct srcTCPSS_t *) s;
    struct PDU_t * result = NULL;
-   struct event_t * ev;
 
    printf_debug(DEBUG_SRC, "IN\n");
 
@@ -164,7 +163,7 @@ struct PDU_t * srcTCPss_getPDU(void * s)
   // PDUs, if available
   if (filePDU_length(src->outputQueue) > 0) {
      printf_debug(DEBUG_SRC, "scheduling two more segments\n");
-     event_add(srcTCPss_send2Segments, src, motSim_getCurrentTime() + src->RTT);
+     motSim_scheduleNewEvent(srcTCPss_send2Segments, src, motSim_getCurrentTime() + src->RTT);
      result = filePDU_extract(src->outputQueue);
      src->nbSentSegments++;
      printf_debug(DEBUG_SRC, "returning a segment (nb %d)\n", src->nbSentSegments);
@@ -178,9 +177,7 @@ struct PDU_t * srcTCPss_getPDU(void * s)
         // Run any event in the list, if any.
         // WARNING : this this the EOT, not the end of reception !
         // You may need to wait for an extra RTT ...
-        while ((ev = eventFile_extract(src->EOTEventList)) != NULL) {
-           event_run(ev);
-	}
+        eventList_runList(src->EOTEventList);
      }
      return result; 
   } else { // Should not occur ...
@@ -227,5 +224,5 @@ void srcTCPss_free(struct srcTCPSS_t * src)
  */
 void srcTCPss_addEOTEvent(struct srcTCPSS_t * src, struct event_t * ev)
 {
-   eventFile_insert(src->EOTEventList, ev);
+   eventList_append(src->EOTEventList, ev);
 }
