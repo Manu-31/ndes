@@ -31,6 +31,13 @@ struct PDU_t {
 declareObjectFunctions(PDU);
 
 /**
+ * @brief Les entrées de log sont des ndesObject
+ */
+struct ndesObjectType_t PDUType = {
+  ndesObjectTypeDefaultValues(PDU)
+};
+
+/**
  * @brief Définition des fonctions spécifiques liées au ndesObject
  */
 defineObjectFunctions(PDU);
@@ -46,12 +53,6 @@ struct probe_t * PDU_releaseProbe;
 // Pointeur sur une PDU libre (pour accélerer alloc/free)
 struct PDU_t * firstFreePDU = NULL;
 
-/**
- * @brief Les entrées de log sont des ndesObject
- */
-struct ndesObjectType_t PDUType = {
-  ndesObjectTypeDefaultValues(PDU)
-};
 
 int PDU_size(struct PDU_t * PDU){
    return PDU->taille;

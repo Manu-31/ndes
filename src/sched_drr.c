@@ -50,13 +50,14 @@ struct schedDRR_t {
    struct schedDRRInput_t  * nextInput;   //!< Prochaine source à servir
 };
 
+struct ndesObjectType_t schedDRRType = {
+  ndesObjectTypeDefaultValues(schedDRR)
+};
+
 /**
  * @brief Définition des fonctions spécifiques liées au ndesObject
  */
 defineObjectFunctions(schedDRR);
-struct ndesObjectType_t schedDRRType = {
-  ndesObjectTypeDefaultValues(schedDRR)
-};
 
 /**
  * CrÃ©ation d'une instance de l'ordonnanceur avec la destination en

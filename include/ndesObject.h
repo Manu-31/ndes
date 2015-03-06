@@ -59,7 +59,7 @@ struct ndesObjectType_t {
    void   (*free)(void *) ;     //!< Destruction d'une instance
    int    size;                 //!< La taille de la structure privée
    int    objectOffset; 
-   void * next;
+   void * firstFree;             //!!< A pointer to the first free entry
 };
 
 /*
@@ -80,14 +80,18 @@ struct ndesObjectType_t {
  *    ...
  *}
  */
+
 /**
  * @brief Définition d'un champ ndesObject dans la structure
  *
  * Cette déclaration doit être la première de toute structure qui doit
  * profiter des ndesObject.
+ * Le champs nextFree est une superbe horreur pour chainer des object
+ * libérés afin de les ré-utiliser
  */
 #define declareAsNdesObject \
-   struct ndesObject_t * ndesObject
+   struct ndesObject_t * ndesObject; \
+   void                * nextFree
 
 /**
  * @brief Définition de la fonction d'obtention de l'objet
@@ -115,6 +119,18 @@ char * ndesObjectType##_getName(struct ndesObjectType##_t * o)	\
 {    \
   return o->ndesObject->name;		\
 } \
+struct ndesObjectType##_t * ndesObjectType##_createWithObject() \
+{ \
+   struct ndesObjectType##_t * result; \
+   struct ndesObject_t       * obj; \
+   printf_debug(DEBUG_OBJECT, "allocating data\n");	\
+   result = ndesObjectType##Type.malloc();		\
+   printf_debug(DEBUG_OBJECT, "allocating object\n");	\
+   obj = ndesObject_create(result, &ndesObjectType##Type);	\
+   ndesObjectType##_setObject(result, obj); \
+     printf_debug(DEBUG_OBJECT, "OUT (%p created)\n", result);	\
+   return result;\
+} \
 
    
 /**
@@ -124,8 +140,10 @@ char * ndesObjectType##_getName(struct ndesObjectType##_t * o)	\
 struct ndesObject_t * ndesObjectType##_getObject(struct ndesObjectType##_t * o); \
 void ndesObjectType##_setObject(struct ndesObjectType##_t * o,  struct ndesObject_t *ndesObject); \
 int ndesObjectType##_getObjectId(struct ndesObjectType##_t * o); \
- void ndesObjectType##_setName(struct ndesObjectType##_t * o, const char * n); \
-     char * ndesObjectType##_getName(struct ndesObjectType##_t * o);	\
+void ndesObjectType##_setName(struct ndesObjectType##_t * o, const char * n); \
+char * ndesObjectType##_getName(struct ndesObjectType##_t * o);	\
+struct ndesObjectType##_t * ndesObjectType##_create_(); \
+ struct ndesObjectType_t ndesObjectType##Type;
 
    
 /**
@@ -136,7 +154,7 @@ int ndesObjectType##_getObjectId(struct ndesObjectType##_t * o); \
    .malloc       = ndesObject_defaultMalloc,	\
    .init         = ndesObject_defaultInit,  \
    .free         = ndesObject_defaultFree,   \
-   .next         = NULL,    \
+   .firstFree    = NULL,    \
    .getObject    = ndesObject_defaultGetObject, \
    .setObject    = ndesObject_defaultSetObject, \
    .size         = sizeof(struct myType##_t),    \
@@ -146,7 +164,8 @@ int ndesObjectType##_getObjectId(struct ndesObjectType##_t * o); \
  * @brief L'initialisation de la partie ndesObject d'un objet
  */
 #define ndesObjectInit(private, myType)		\
-  private->ndesObject = ndesObject_create(private, &myType##Type)
+  private->ndesObject = ndesObject_create(private, &myType##Type);	\
+  private->nextFree = NULL;
 
 /*-----------------------------------------------------------------------
  * Les fonctions de manipulation des ndesObject

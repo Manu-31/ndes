@@ -19,16 +19,16 @@ struct PDUFilter_t {
 };
 
 /**
- * @brief ndesObject basic definitions
- */
-defineObjectFunctions(PDUFilter);
-
-/**
  * @brief ndesObject declaration
  */
 struct ndesObjectType_t PDUFilterType = {
    ndesObjectTypeDefaultValues(PDUFilter)
 };
+
+/**
+ * @brief ndesObject basic definitions
+ */
+defineObjectFunctions(PDUFilter);
 
 /**
  * @brief Creation of a filter

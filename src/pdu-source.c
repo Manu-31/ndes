@@ -38,13 +38,14 @@ struct PDUSource_t {
    int detNextIdx; //!< Prochain indice dans le cas déterministe
 };
 
+struct ndesObjectType_t PDUSourceType = {
+  ndesObjectTypeDefaultValues(PDUSource)
+};
+
 /**
  * @brief Définition des fonctions spécifiques liées au ndesObject
  */
 defineObjectFunctions(PDUSource);
-struct ndesObjectType_t PDUSourceType = {
-  ndesObjectTypeDefaultValues(PDUSource)
-};
 
 struct PDUSource_t * PDUSource_create(struct dateGenerator_t * dateGen,
 				      void * destination,

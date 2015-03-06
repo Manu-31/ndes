@@ -81,14 +81,16 @@ struct ndesObjectType_t * ndesObject_getType(struct ndesObject_t * ndesObject)
  */
 void * ndesObject_defaultMalloc(struct ndesObjectType_t * ndesObjectType)
 {
-   void * result;
+   void * result = NULL;
 
    printf_debug(DEBUG_OBJECT, "IN\n");
 
-   if (ndesObjectType->next){
-      printf("ERREUR Gestion de mémoire à faire ...\n");
-      exit(1);
+   // If a free instance is available, we return it
+   if (ndesObjectType->firstFree){
+      result = ndesObjectType->firstFree;
+      ndesObjectType->firstFree = ((void **)result)[1]; // WARNING c'est pas génial, mais comment faire ?
    } else {
+   // If not, we need to alloc
       result = sim_malloc(ndesObjectType->size);
    }
 
@@ -124,7 +126,11 @@ void ndesObject_defaultInit(void * ob)
  */
 void ndesObject_defaultFree(void * ob)
 {
-   motSim_error(MS_FATAL, "pas implantée");
+   struct ndesObject_t *     ndesObject = ndesObject_defaultGetObject(ob);
+   struct ndesObjectType_t * objectType = ndesObject->type;
+
+   ((void **)ob)[1] = objectType->firstFree;
+   objectType->firstFree = ob;   
 }
 
 /**

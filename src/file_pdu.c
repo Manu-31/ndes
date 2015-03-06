@@ -57,10 +57,10 @@ struct filePDU_t {
 /**
  * @brief Définition des fonctions spécifiques liées au ndesObject
  */
-defineObjectFunctions(filePDU);
 struct ndesObjectType_t filePDUType = {
    ndesObjectTypeDefaultValues(filePDU)
 };
+defineObjectFunctions(filePDU);
 
 /*
  * Un affichage un peu moche de la file. Peut Ãªtre utile dans des

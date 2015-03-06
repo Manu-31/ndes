@@ -20,16 +20,16 @@ struct PDUSink_t {
 };
 
 /**
- * @brief Définition des fonctions spécifiques liées au ndesObject
- */
-defineObjectFunctions(PDUSink);
-
-/**
  * @brief Les entrées de log sont des ndesObject
  */
 struct ndesObjectType_t PDUSinkType = {
   ndesObjectTypeDefaultValues(PDUSink)
 };
+
+/**
+ * @brief Définition des fonctions spécifiques liées au ndesObject
+ */
+defineObjectFunctions(PDUSink);
 
 struct PDUSink_t * PDUSink_create()
 {

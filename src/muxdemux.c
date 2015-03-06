@@ -32,16 +32,16 @@ struct muxDemuxSenderSAP_t {
 };
 
 /**
- * @brief Définition des fonctions spécifiques liées au ndesObject
- */
-defineObjectFunctions(muxDemuxSenderSAP);
-
-/**
  * @brief Les senderSAP sont aussi des ndesObject
  */
 struct ndesObjectType_t  muxDemuxSenderSAPType = {
    ndesObjectTypeDefaultValues(muxDemuxSenderSAP)
 };
+
+/**
+ * @brief Définition des fonctions spécifiques liées au ndesObject
+ */
+defineObjectFunctions(muxDemuxSenderSAP);
 
 #define SAPI_MAGIC_NB ((long long unsigned)684253148796258036)
 //#define SAPI_MAGIC_NB ((long long unsigned)48324832)
@@ -274,16 +274,16 @@ struct muxDemuxReceiverSAP_t {
 
 
 /**
- * @brief Définition des fonctions spécifiques liées au ndesObject
- */
-defineObjectFunctions(muxDemuxReceiverSAP);
-
-/**
  * @brief Les receiverSAP sont aussi des ndesObject
  */
 struct ndesObjectType_t  muxDemuxReceiverSAPType = {
    ndesObjectTypeDefaultValues(muxDemuxReceiverSAP)
 };
+
+/**
+ * @brief Définition des fonctions spécifiques liées au ndesObject
+ */
+defineObjectFunctions(muxDemuxReceiverSAP);
 
 /**
  * @brief Receiver (demultiplexer) creator

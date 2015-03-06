@@ -53,16 +53,16 @@ struct srvGen_t {
 };
 
 /**
- * @brief Définition des fonctions spécifiques liées au ndesObject
- */
-defineObjectFunctions(srvGen);
-
-/**
  * @brief Les entrées de log sont des ndesObject
  */
 struct ndesObjectType_t srvGenType = {
    ndesObjectTypeDefaultValues(srvGen)
 };
+
+/**
+ * @brief Définition des fonctions spécifiques liées au ndesObject
+ */
+defineObjectFunctions(srvGen);
 
 /*
  * Creation et initialisation d'un serveur
