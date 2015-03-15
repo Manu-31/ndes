@@ -3,6 +3,7 @@
 
 #include <pdu.h>
 #include <ndesObject.h>
+#include <probe.h>
 
 /* WARNING
  * Le type est visible car utilisé par différents modules vu que c'est

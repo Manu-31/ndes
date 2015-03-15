@@ -308,7 +308,7 @@ struct PDU_t * PDUSource_getPDU(void * src)
 
    //   if (PDUSource_getName(source) != NULL)
       printf_debug(DEBUG_SRC, "'%s' releasing PDU %d (size %d)\n",
-		PDUSource_getName(source),
+		PDUSource_getObjectName(source),
 		PDU_id(pdu),
 		PDU_size(pdu));
 

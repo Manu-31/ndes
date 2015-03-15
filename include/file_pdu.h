@@ -8,6 +8,7 @@
 #ifndef __DEF_LISTE_PDU
 #define __DEF_LISTE_PDU
 
+#include <ndesObject.h>
 #include <pdu.h>
 #include <probe.h>
 
@@ -176,5 +177,10 @@ void filePDU_dump(struct filePDU_t * file);
  * simulation. Ici il suffit de vider la file de tous ses Ã©lÃ©ments.
  */
 void filePDU_reset(struct filePDU_t * file);
+
+/**
+ * @brief filePDU can also be seen as ndesObjects
+ */
+declareObjectFunctions(filePDU);
 
 #endif

@@ -5,16 +5,17 @@
  * A quick hack that could turn useless !
  */
 
+#ifndef __DEF_NDES_PDU_FILTER
+#define __DEF_NDES_PDU_FILTER
+
+#include <ndesObject.h>
+#include <ndesObjectList.h>
+#include <pdu.h>
+
 /**
  * @brief Filters type
  */
 struct PDUFilter_t;
-
-#ifndef __DEF_NDES_PDU_FILTER
-#define __DEF_NDES_PDU_FILTER
-
-#include <pdu.h>
-#include <probe.h>
 
 
 /**
@@ -51,5 +52,10 @@ void PDUFilter_setTestFunction(struct PDUFilter_t * filter,
  * @result Yes (1) or no (0)
  */
 int PDUFilter_filterPDU(struct PDUFilter_t * f, struct PDU_t * pdu);
+
+/**
+ * @brief filters can also be seen as ndesObjects
+ */
+declareObjectFunctions(PDUFilter);
 
 #endif

@@ -89,4 +89,10 @@ int muxDemuxReceiver_processPDU(void * rcv,
    			        getPDU_t getPDU,
 			        void * source);
 
+/**
+ * @brief sender and receiver can also be seen as ndesObjects
+ */
+declareObjectFunctions(muxDemuxSenderSAP);
+declareObjectFunctions(muxDemuxReceiverSAP);
+
 #endif

@@ -8,7 +8,7 @@
 
 #include <pdu-sink.h>
 
-#include <ndesObject.h>
+#include <probe.h>
 #include <log.h>
 
 /**

@@ -7,8 +7,8 @@
 #include <assert.h>
 
 #include <file_pdu.h>
+
 #include <motsim.h>
-#include <ndesObject.h>
 #include <log.h>
 
 /*
@@ -60,6 +60,7 @@ struct filePDU_t {
 struct ndesObjectType_t filePDUType = {
    ndesObjectTypeDefaultValues(filePDU)
 };
+
 defineObjectFunctions(filePDU);
 
 /*

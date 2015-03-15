@@ -163,7 +163,7 @@ static unsigned long debug_mask __attribute__ ((unused)) = 0x00000000
   //     | DEBUG_OBJECT
   //     | DEBUG_MALLOC    // L'utilisation de malloc
        | DEBUG_TBD       // Le code pas implanté
-     | DEBUG_ALWAYS
+  //     | DEBUG_ALWAYS
   ;
 
 #else

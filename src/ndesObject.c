@@ -52,6 +52,14 @@ int ndesObject_getId(struct ndesObject_t * o)
   return o->id;
 }
 
+/**
+ * @brief Obtention du nom d'un ndesObject
+ */
+char * ndesObject_getName(struct ndesObject_t * o)
+{
+  return o->name;
+}
+
 
 /**
  * @brief Obtention des données associées à l'objet
@@ -87,10 +95,12 @@ void * ndesObject_defaultMalloc(struct ndesObjectType_t * ndesObjectType)
 
    // If a free instance is available, we return it
    if (ndesObjectType->firstFree){
+      printf_debug(DEBUG_OBJECT, "re-using\n");
       result = ndesObjectType->firstFree;
       ndesObjectType->firstFree = ((void **)result)[1]; // WARNING c'est pas génial, mais comment faire ?
    } else {
    // If not, we need to alloc
+      printf_debug(DEBUG_OBJECT, "malloc'ing\n");
       result = sim_malloc(ndesObjectType->size);
    }
 
@@ -197,3 +207,16 @@ void ndesObject_addType(char * name, struct ndesTypeHelper_t * helper)
 {
 }
 */
+
+int ndesObject_alphabeticallySorted(void * a, void * b)
+{
+   printf_debug(DEBUG_OBJECT, "seeking object a\n");
+   struct ndesObject_t * objectA = ndesObject_defaultGetObject(a);
+   printf_debug(DEBUG_OBJECT, "seeking object a\n");
+   struct ndesObject_t * objectB = ndesObject_defaultGetObject(b);
+   printf_debug(DEBUG_OBJECT, "name of a = \"%s\"\n", ndesObject_getName(objectA));
+   printf_debug(DEBUG_OBJECT, "name of b = \"%s\"\n", ndesObject_getName(objectA));
+
+   return (strcmp(ndesObject_getName(objectA), ndesObject_getName(objectB)) < 0);
+}
+

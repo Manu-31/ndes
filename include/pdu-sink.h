@@ -6,6 +6,7 @@
 #define __DEF_PDU_SINK
 
 #include <pdu.h>
+#include <ndesObject.h>
 
 struct PDUSink_t;
 
@@ -24,5 +25,10 @@ int PDUSink_processPDU(void * pduSink, getPDU_t getPDU, void * source);
  */
 void PDUSink_addInputProbe(struct PDUSink_t * sink,
 			   struct probe_t * insertProbe);
+
+/**
+ * @brief PDUSink can also be seen as ndesObjects
+ */
+declareObjectFunctions(PDUSink);
 
 #endif

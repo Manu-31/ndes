@@ -8,6 +8,7 @@
 #define __SCHED_DEFICIT_ROUND_ROBIN
 
 #include <pdu.h>
+#include <ndesObject.h>
 
 /**
  * Nombre maximal d'entrées
@@ -45,4 +46,9 @@ struct PDU_t * schedDRR_getPDU(void * s);
 int schedDRR_processPDU(void *s,
 			getPDU_t getPDU,
 			void * source);
+
+/**
+ * @brief schedDRR can also be seen as ndesObjects
+ */
+declareObjectFunctions(schedDRR);
 #endif

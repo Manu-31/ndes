@@ -7,7 +7,6 @@
 #define __DEF_LISTE_NDES_OBJECT
 
 #include <ndesObject.h>
-#include <probe.h>
 
 //struct ndesObjectList_t;
 
@@ -86,6 +85,14 @@ void ndesObjectList_insertObjectAfter(struct ndesObjectList_t * list,
 void ndesObjectList_insertSortedObject(struct ndesObjectList_t * file,
                                        struct ndesObject_t * object,
                                        int (*sorted)(void * a, void * b));
+/**
+ * @brief insert an object in a sorted list
+ * 
+ * sorted(a, b) must be no nul if b is to be placed after a 
+ */
+void ndesObjectList_insertSorted(struct ndesObjectList_t * file,
+                                 void * object,
+                                 int (*sorted)(void * a, void * b));
 
 /**
  * @brief Extraction d'un objet depuis la liste

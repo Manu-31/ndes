@@ -5,9 +5,12 @@
  * Permet de modéliser des serveurs simples. Utile pour modéliser par
  * exemple un lien.
  */
+#ifndef __GENERIC_SERVER__
+#define __GENERIC_SERVER__
 
 #include <pdu.h>
 #include <motsim.h>
+#include <ndesObject.h>
 
 struct srvGen_t;
 
@@ -63,3 +66,10 @@ void srvGen_setServiceTime(struct srvGen_t * srv,
  * @brief Ajout d'une sonde sur le temps de service
  */
 void srvGen_addServiceProbe(struct srvGen_t * srv, struct probe_t * serviceProbe);
+
+/**
+ * @brief srvGen can also be seen as ndesObjects
+ */
+declareObjectFunctions(srvGen);
+
+#endif

@@ -235,6 +235,20 @@ void ndesObjectList_insertSortedObject(struct ndesObjectList_t * file,
 
 }
 
+/**
+ * @brief insert an object in a sorted list
+ * 
+ * sorted(a, b) must be no nul if b is to be placed after a 
+ */
+void ndesObjectList_insertSorted(struct ndesObjectList_t * file,
+                                 void * object,
+                                 int (*sorted)(void * a, void * b))
+{
+   assert(file->type->getObject(object)->type == file->type);
+
+   ndesObjectList_insertSortedObject(file, file->type->getObject(object), sorted);
+}
+
 void ndesObjectList_insert(struct ndesObjectList_t * file,
 			   void * object)
 {

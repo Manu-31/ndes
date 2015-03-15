@@ -6,7 +6,6 @@
  */
 
 #include <pdu-filter.h>
-#include <ndesObject.h>
 
 /**
  * @brief Filters type

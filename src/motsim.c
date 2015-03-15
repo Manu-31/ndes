@@ -9,6 +9,7 @@
 #include <event-list.h>
 #include <pdu.h>
 #include <log.h>
+#include <probe.h>
 
 struct resetClient_t {
    void * data;

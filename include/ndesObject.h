@@ -25,7 +25,6 @@
 #include <string.h>   // strdup
 
 #include <motsim.h>
-#include <probe.h>
 
 /**
  * @brief Le type général de tous les objets
@@ -107,15 +106,19 @@ void ndesObjectType##_setObject(struct ndesObjectType##_t * o,  struct ndesObjec
 {    \
    o->ndesObject = ndesObject; \
 }  \
+struct ndesObjectType##_t * ndesObjectType##_getNdesObjectPrivate(struct ndesObject_t * o) \
+{ \
+  return (struct ndesObjectType##_t *)ndesObject_getPrivate(o);	\
+} \
 int ndesObjectType##_getObjectId(struct ndesObjectType##_t * o) \
 {    \
    return o->ndesObject->id; \
 } \
-void ndesObjectType##_setName(struct ndesObjectType##_t * o, const char * n)	\
+void ndesObjectType##_setObjectName(struct ndesObjectType##_t * o, const char * n)	\
 {    \
   o->ndesObject->name = strdup(n);		\
 } \
-char * ndesObjectType##_getName(struct ndesObjectType##_t * o)	\
+char * ndesObjectType##_getObjectName(struct ndesObjectType##_t * o)	\
 {    \
   return o->ndesObject->name;		\
 } \
@@ -131,6 +134,12 @@ struct ndesObjectType##_t * ndesObjectType##_createWithObject() \
      printf_debug(DEBUG_OBJECT, "OUT (%p created)\n", result);	\
    return result;\
 } \
+\
+void * ndesObjectType##_defaultMalloc() \
+{ \
+   return ndesObject_defaultMalloc(&ndesObjectType##Type);\
+}\
+
 
    
 /**
@@ -140,10 +149,12 @@ struct ndesObjectType##_t * ndesObjectType##_createWithObject() \
 struct ndesObject_t * ndesObjectType##_getObject(struct ndesObjectType##_t * o); \
 void ndesObjectType##_setObject(struct ndesObjectType##_t * o,  struct ndesObject_t *ndesObject); \
 int ndesObjectType##_getObjectId(struct ndesObjectType##_t * o); \
-void ndesObjectType##_setName(struct ndesObjectType##_t * o, const char * n); \
-char * ndesObjectType##_getName(struct ndesObjectType##_t * o);	\
+void ndesObjectType##_setObjectName(struct ndesObjectType##_t * o, const char * n); \
+char * ndesObjectType##_getObjectName(struct ndesObjectType##_t * o);	\
 struct ndesObjectType##_t * ndesObjectType##_create_(); \
- struct ndesObjectType_t ndesObjectType##Type;
+struct ndesObjectType_t ndesObjectType##Type; \
+struct ndesObjectType##_t * ndesObjectType##_getNdesObjectPrivate(struct ndesObject##_t * o); \
+void * ndesObjectType##_defaultMalloc(); \
 
    
 /**
@@ -151,7 +162,7 @@ struct ndesObjectType##_t * ndesObjectType##_create_(); \
  */
 #define ndesObjectTypeDefaultValues(myType)	\
    .name         = #myType,       \
-   .malloc       = ndesObject_defaultMalloc,	\
+   .malloc       = myType##_defaultMalloc,	\
    .init         = ndesObject_defaultInit,  \
    .free         = ndesObject_defaultFree,   \
    .firstFree    = NULL,    \
@@ -263,5 +274,6 @@ void * ndesObject_createObject(struct ndesObjectType_t * ndesObjectType);
  */
 void ndesObject_addType(char * name, struct ndesObjectType_t * helper);
 
+int ndesObject_alphabeticallySorted(void * a, void * b);
 
 #endif

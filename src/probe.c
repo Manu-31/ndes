@@ -26,6 +26,7 @@
 
 #include <motsim.h>
 #include <event.h>
+#include <pdu-filter.h>
 #include <probe.h>
 
 /**
