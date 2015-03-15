@@ -1,7 +1,7 @@
 SRC_FILES= $(wildcard *.c)
 OBJ_FILES= $(SRC_FILES:.c=.o)
 
-EXAMPLES = trafic-model-ex inoutdemo debits rg-its rg-draw example-1 example-2 example-3
+EXAMPLES = src-tcpss-ex trafic-model-ex inoutdemo debits rg-its rg-draw example-1 example-2 example-3
 SUBDIRS = tuto-ndesobj
 
 .PHONY: clean 
@@ -14,8 +14,14 @@ trafic-model-ex : trafic-model-ex.o  ../$(SRC_DIR)/libndes.a
 inoutdemo : inoutdemo.o ../$(SRC_DIR)/libndes.a
 	$(CC) inoutdemo.o -o inoutdemo $(LDFLAGS)
 
+src-tcpss-ex : src-tcpss-ex.o ../$(SRC_DIR)/libndes.a
+	$(CC) src-tcpss-ex.o -o src-tcpss-ex $(LDFLAGS)
+
 debits : debits.o ../$(SRC_DIR)/libndes.a
 	$(CC) debits.o -o debits $(LDFLAGS)
+
+hdlc-demo : hdlc-demo.o ../$(SRC_DIR)/libndes.a
+	$(CC) hdlc-demo.o -o hdlc-demo $(LDFLAGS)
 
 rg-its : rg-its.o ../$(SRC_DIR)/libndes.a
 	$(CC) rg-its.o -o rg-its $(LDFLAGS)

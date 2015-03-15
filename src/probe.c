@@ -632,6 +632,29 @@ double probe_exhaustiveGetSampleN(struct probe_t * probe, int n)
 }
 
 /**
+ * @brief Reading the nth sample's date in an exhaustive probe
+ * @param probe The exhaustive probe to read from
+ * @param n the number of sample to read
+ * @result the date of sample n
+ */
+double probe_exhaustiveGetDateN(struct probe_t * probe, int n)
+{
+   assert(probe->probeType == exhaustiveProbeType);
+   assert(n<=probe->nbSamples); // WARNING  < or <= !?
+
+   struct sampleSet_t * currentSet = probe->data.sampleSet;
+   int numSet = probe->nbSamples / PROBE_NB_SAMPLES_MAX;
+
+   // On va sur le bon set
+   while (numSet > n / PROBE_NB_SAMPLES_MAX){
+      currentSet = currentSet->prev;
+      numSet--;
+   }
+
+   return currentSet->dates[n% PROBE_NB_SAMPLES_MAX];
+}
+
+/**
  * @brief Echantillon d'une valeur dans une probe à fenêtre glissante
  */
 void probe_slidingWindowSample(struct probe_t * pr, double v)

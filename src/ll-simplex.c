@@ -95,7 +95,6 @@ void llSimplex_endOfTransmission(void * l)
    // La PDU est en l'air !
    filePDU_insert(lls->flyingPDUs, lls->pdu);
 
-
    // On est dispo du coup !
    lls->idle = 1;
 
@@ -137,16 +136,19 @@ int llSimplex_processPDU(void * l,
       if (lls->idle) {   // Si je suis pret, je traite
          // C'est pas pour tester, il y a une PDU à traiter
          pdu = getPDU(source);
-         assert(pdu != NULL);
-         lls->idle = 0;   // Je ne suis plus pret !
-         lls->pdu = pdu;
-	 printf_debug(DEBUG_PDU, "On prepare la fin de transmission a %lf\n",
+         if (pdu) {
+            assert(pdu != NULL);
+            lls->idle = 0;   // Je ne suis plus pret !
+            lls->pdu = pdu; 
+            printf_debug(DEBUG_PDU, "On prepare la fin de transmission a %lf\n",
 		      motSim_getCurrentTime() + PDU_size(pdu)*8.0/lls->throughput);
          motSim_scheduleNewEvent(llSimplex_endOfTransmission,
    		l, 
 		motSim_getCurrentTime() + PDU_size(pdu)*8.0/lls->throughput);
-         lls->lastSource = NULL;
-         lls->lastGetPDU = NULL;
+	 } else {
+            lls->lastSource = NULL;
+            lls->lastGetPDU = NULL;
+	 }
          result =  1;
       } else {  // Sinon, je me le note pour la fin de transmission
          lls->lastSource = source;

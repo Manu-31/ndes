@@ -239,10 +239,21 @@ double probe_IAStdDev(struct probe_t * probe);
  */
 double probe_throughput(struct probe_t * p);
 
-/*
- * Reading the nth sample in an exhaustive probe
+/**
+ * @brief Reading the nth sample in an exhaustive probe
+ * @param probe The exhaustive probe to read from
+ * @param n the number of sample to read
+ * @result the value of sample n
  */
 double probe_exhaustiveGetSampleN(struct probe_t * probe, int n);
+
+/**
+ * @brief Reading the nth sample's date in an exhaustive probe
+ * @param probe The exhaustive probe to read from
+ * @param n the number of sample to read
+ * @result the date of sample n
+ */
+double probe_exhaustiveGetDateN(struct probe_t * probe, int n);
 
 /*
  * Conversion d'une sonde exhaustive en une graphBar
