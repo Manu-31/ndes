@@ -17,19 +17,27 @@ aléatoire.
 \subsection{Caractéristiques d'un générateur aléatoire}
 
    Un générateur aléatoire est caractérisé par trois composantes
-fondamentales 
+fondamentales (illustrées de gauche à droite par la figure
+\ref{figure:randomGenerator}.
 
 \begin{description}
-   \item[Le type des données générées] peut être réel, entier,
-     discret, \ldots
-   \item[La loi] peut être uniforme, exponentielle, \ldots
    \item[La source] permet de déterminer la qualité de l'aléa, et par
      exemple de le rendre déterministe (afin d'obtenir la même
      séquence sur plusieurs simulation).
+   \item[La loi] peut être uniforme, exponentielle, \ldots
+   \item[Le type des données générées] peut être réel, entier,
+     discret, \ldots
 \end{description}
 
    Attention, ces trois composantes sont éventuellement constitutées
 d'un jeu de paramètres.
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=\textwidth]{randomGenerator.png}
+\caption{Structure générale d'un générateur aléatoire\label{figure:randomGenerator}}
+\end{center}
+\end{figure}
 
    Le principe général de génération d'une valeur est le suivant.
 
@@ -45,6 +53,20 @@ d'un jeu de paramètres.
 
    Bref, tout est fait pour laisser sa place au hasard \ldots
 
+   Attention, se pose ici un problème de conversion qui, très
+honnètement, n'est pas encore complètement tranché !
+
+   Les valeurs produites en sortie de l'élément qui implante la
+distribution (le carré central sur la figure
+\ref{figure:randomGenerator} sont comprises dans le support de la
+distribution. Elles seront ensuite adaptées au type, ce qui peut
+donner des choses surprenantes (et difficiles à détectées car
+aléatoires !).
+
+   Le problème essentiel vient des types intervalle. Une
+transformation affine du support est réalisée, ce qui n'est
+probablement pas ce que vous souhaitez. Cette transformation ne
+présente d'intérêt que pour la distribution uniforme.
 
 %------------------------------------------------------------------------
 %
@@ -228,7 +250,6 @@ avec une distribution uniforme réelle dans l'intervalle $[0, 1]$.
 \end{center}
 \end{figure}
 
-
 %.......................................................................
 %
 %.......................................................................
@@ -278,6 +299,19 @@ $x_{min} = 1.0$
 \caption{Une loi de Pareto\label{figure:distpar}}
 \end{center}
 \end{figure}
+
+%.......................................................................
+%
+%.......................................................................
+\subsubsection{Distribution de Pareto tronquée}
+
+
+%.......................................................................
+%
+%.......................................................................
+\subsubsection{Distribution Log normale tronquée}
+
+
 %.......................................................................
 %
 %.......................................................................
@@ -326,3 +360,54 @@ double randomGenerator_getNextDouble(struct randomGenerator_t * rg);
 %------------------------------------------------------------------------
 \subsection{Les sondes}
 
+   Il n'existe pour le moment qu'un seul point d'ancrage pour les
+sondes : sur les valeurs générées par un générateur aléatoire. Ces
+valeurs sont donc converties en {\tt double} avant d'être
+échantillonnées.
+
+   La fonction permettant de placer une telle sonde est la suivante 
+
+\index{randomGenerator\_addValueProbe}
+\begin{verbatim}
+void randomGenerator_addValueProbe(struct randomGenerator_t * rg,
+				   struct probe_t * p);
+\end{verbatim}
+
+   Je pense que cela se passe de commentaire, \ldots
+
+%------------------------------------------------------------------------
+%
+%------------------------------------------------------------------------
+\subsection{Le coin du programmeur}
+
+   Tout ce qui précède est suffisant pour l'utilisateur. En revanche,
+comme d'habitude, pour le programmeur, les choses se compliquent un
+peu.
+
+   Comme souligné précédemment, les générateurs aléatoires sont
+composés de trois parties. Voyons ici comment elles sont implantées et
+peuvent être étendues.
+
+%.......................................................................
+%
+%.......................................................................
+\subsubsection{Les sources d'aléa}
+
+%.......................................................................
+%
+%.......................................................................
+\subsubsection{Les distributions}
+
+%.......................................................................
+%
+%.......................................................................
+\subsubsection{Définition par la fonction inverse de la {\sc cdf}}
+
+   Certaines distributions peuvent être simulées en se fondant sur la
+fonction réciproque de la fonction  de répartition. {\sc Ndes} propose
+des outils pour cela.
+
+%.......................................................................
+%
+%.......................................................................
+\subsubsection{Les types}

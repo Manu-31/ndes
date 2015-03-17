@@ -8,7 +8,8 @@ TESTS = generators-0 generators-1 \
 	muxdemux rr-mux \
 	drr \
 	source-1 source-2 \
-	event-test
+	event-test \
+	truncated-pareto \
 #	debits \
 #	muxfcfs-1 \
 #	intconf
@@ -20,6 +21,9 @@ all : $(TESTS)
 
 tests :  $(TESTS)
 	./run-tests.sh $(TESTS)
+
+truncated-pareto : truncated-pareto.o ../$(SRC_DIR)/libndes.a
+	$(CC) truncated-pareto.o -o truncated-pareto $(LDFLAGS)
 
 event-test : event-test.o ../$(SRC_DIR)/libndes.a
 	$(CC) event-test.o -o event-test $(LDFLAGS)

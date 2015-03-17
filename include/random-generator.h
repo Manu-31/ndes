@@ -19,39 +19,6 @@
 
 struct randomGenerator_t;
 
-/*
- * Available types for the random values
- */
-#define rGTypeUInt         1
-#define rGTypeULong        2
-#define rGTypeFloat        3
-#define rGTypeDouble       4
-#define rGTypeDoubleRange  5
-#define rGTypeUIntEnum     6
-#define rGTypeDoubleEnum   7
-#define rGTypeUIntRange    8
-#define rGTypeUIntConstant 9
-#define rGTypeDoubleConstant 10
-
-/*
- * Available distributions
- */
-#define rGDistNoDist       0
-#define rGDistUniform      1
-#define rGDistExponential  2
-#define rGDistDiscrete     3
-#define rGDistITS          4
-
-#define rGDistDefault rGDistUniform
-/*
- * Entropy sources
- */
-#define rGSourceErand48 1
-#define rGSourceReplay  2
-#define rgSourceUrandom 3
-
-#define rgSourceDefault rGSourceErand48
-
 /*==========================================================================*/
 /*  Creators                                                                */
 /*==========================================================================*/
@@ -170,6 +137,23 @@ void randomGenerator_setDistributionExp(struct randomGenerator_t * rg, double la
    randomGenerator_setQuantile2Param(rg, randomGenerator_paretoDistQ, alpha, xmin)
 
 /**
+ * @brief Set a truncated pareto distribution
+ * @param rg The random generator to be modified
+ * @param alpha The shape of the pareto distribution
+ * @param xmin The scale of the pareto distribution
+ * @param xmax The maximum value of the pareto distribution
+ */
+#define randomGenerator_setDistributionTruncatedPareto(rg, alpha, xmin, xmax) \
+  randomGenerator_setQuantile3Param(rg, randomGenerator_truncatedParetoDistQ, alpha, xmin, xmax)
+
+/**
+ * @brief Initalization of a truncated log normal distribution
+ */
+void randomGenerator_truncatedLogNormalInit(struct randomGenerator_t * rg,
+                                                       double mu, double sigma,
+					    double min, double max);
+
+/**
  * @brief Define a distribution by its quantile function for inverse
  * transform sampling
  * @param rg The random generator
@@ -191,6 +175,20 @@ void randomGenerator_setQuantile1Param(struct randomGenerator_t * rg,
 void randomGenerator_setQuantile2Param(struct randomGenerator_t * rg,
 				       double (*q)(double x, double p1, double p2),
 				       double p1, double p2);
+
+/**
+ * @brief Define a distribution by its quantile function for inverse
+ * transform sampling
+ * @param rg The random generator
+ * @param q The inverse cumulative density (quantile) function
+ * @param p1 The first parameter of the quantile function
+ * @param p2 The second parameter of the quantile function
+ * @param p3 The third parameter of the quantile function
+ */
+void randomGenerator_setQuantile3Param(struct randomGenerator_t * rg,
+				       double (*q)(double x, double p1, double p2, double p3),
+				       double p1, double p2, double p3);
+
 /**
  * @brief Inverse of CDF for exponential distribution
  */
@@ -200,6 +198,11 @@ double randomGenerator_expDistQ(double x, double lambda);
  * @brief Inverse of CDF for pareto distribution
  */
 double randomGenerator_paretoDistQ(double x, double alpha, double xmin);
+
+/**
+ * @brief Inverse of CDF for truncated pareto distribution
+ */
+double randomGenerator_truncatedParetoDistQ(double x, double alpha, double xmin, double xmax);
 
 /*
  * Change lambda

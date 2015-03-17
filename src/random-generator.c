@@ -22,6 +22,40 @@
 #include <file_pdu.h>
 #include <random-generator.h>
 
+/**
+ * @brief Available distributions
+ */
+#define rGDistNoDist               0
+#define rGDistUniform              1
+#define rGDistExponential          2
+#define rGDistDiscrete             3
+#define rGDistITS                  4
+#define rGDistTruncatedLogNormal   5
+
+#define rGDistDefault rGDistUniform
+
+/**
+ * @brief Available types for the random values
+ */
+#define rGTypeUInt         1
+#define rGTypeULong        2
+#define rGTypeFloat        3
+#define rGTypeDouble       4
+#define rGTypeDoubleRange  5
+#define rGTypeUIntEnum     6
+#define rGTypeDoubleEnum   7
+#define rGTypeUIntRange    8
+#define rGTypeUIntConstant 9
+#define rGTypeDoubleConstant 10
+
+/**
+ * @brief Entropy sources
+ */
+#define rGSourceErand48 1
+#define rGSourceReplay  2
+#define rGSourceUrandom 3
+
+#define rGSourceDefault rGSourceErand48
 
 /*
  * Structure gÃ©nÃ©rale d'un gÃ©nÃ©rateur alÃ©atoire
@@ -36,7 +70,7 @@ struct randomGenerator_t {
   // c'est une sonde exhaustive
 
 
-   // ParamÃ¨tres liÃ©s au type des donnÃ©es produites
+   // Paramêtres liés au type des données produites
    union {
       struct uLparameter_t {
          unsigned long min;
@@ -64,20 +98,25 @@ struct randomGenerator_t {
 
    //!< Parameters describing the distribution 
    struct {
-      double min, max; // Extreme values
+      double min, max; //!< Distribution support
       union {
          double lambda; //!< Exponential distribution
+         struct {
+            double mu;
+            double sigma;
+         } logNormal;
          struct {       //!< Discrete distribution
             int nbProba;
             double * proba;
          } discrete;
          struct {           //!< ITS distribution
             int nbParam;    //!< Quantile function number of parameters 
-            double p1, p2;  //!< Parameters values
+            double p1, p2, p3;  //!< Parameters values
 	    union {
                double(*q0par)(double x);
                double(*q1par)(double x, double p1);
                double(*q2par)(double x, double p1, double p2);
+               double(*q3par)(double x, double p1, double p2, double p3);
             } q;    //!< Quantile function
          } its;
       } d;
@@ -195,10 +234,6 @@ double randomGenerator_exponentialGetNext(struct randomGenerator_t * rg)
 
    result =  - log( alea) /rg->distParam.d.lambda;
 
-/*
-   printf_debug(DEBUG_GENE, " alea = %6.3f, lambda = %6.3f, result = %6.3f\n",
-		alea, rg->distParam.d.lambda, result);
-*/
    return result;
 }
 
@@ -468,7 +503,8 @@ struct randomGenerator_t * randomGenerator_createDouble()
 
    // Data type
    result->valueType = rGTypeDouble; 
-    printf_debug(DEBUG_GENE, "OUT\n");
+
+   printf_debug(DEBUG_GENE, "OUT (created %p)\n", result);
 
    return result;
 }
@@ -715,6 +751,60 @@ void randomGenerator_setDistributionExp(struct randomGenerator_t * rg, double la
 }
 
 /*-------------------------------------------------------------------------*/
+/*  Truncated Log Normal                                                   */
+/*-------------------------------------------------------------------------*/
+
+/**
+ * @brief Generating next value from a truncated log normal
+ * @param rg a pointer to the random generator
+ * @result a random value produced by the generator
+ *
+ * WARNING : this is an awfull implementation.
+ */
+double randomGenerator_truncatedLogNormalGetNext(struct randomGenerator_t * rg)
+{
+   double R,theta;
+   double result ;
+
+   //  Les sources sont censées être uniformes. La boucle do..while garantit un résultat < max.
+   do{
+      R = sqrt(-2*log(rg->aleaGetNext(rg)));
+      theta = 2*M_PI*rg->aleaGetNext(rg); //R*cos(theta) suit une loi normale (0,1)
+      result = exp(rg->distParam.d.logNormal.mu + rg->distParam.d.logNormal.sigma * R*cos(theta));
+   } while (result > rg->distParam.max || result < rg->distParam.min);
+
+   return result;
+}
+
+/**
+ * @brief Initalization of a truncated log normal distribution
+ */
+void randomGenerator_truncatedLogNormalInit(struct randomGenerator_t * rg,
+                                                       double mu, double sigma,
+                                                       double min, double max)
+{
+   assert(rg->distribution == rGDistTruncatedLogNormal);
+
+   // Define the support
+   rg->distParam.min = min ;
+   rg->distParam.max = max;
+
+   rg->distParam.d.logNormal.mu = mu;
+   rg->distParam.d.logNormal.sigma = sigma;
+   rg->distGetNext = randomGenerator_truncatedLogNormalGetNext;   
+}
+
+/**
+ * @brief Set a truncated log normal distribution
+ */
+void randomGenerator_setDistributionTruncatedLogNormal(struct randomGenerator_t * rg,
+                                                       double mu, double sigma,
+                                                       double min, double max)
+{
+   rg->distribution = rGDistTruncatedLogNormal;
+   randomGenerator_truncatedLogNormalInit(rg, mu, sigma, min, max);
+}
+/*-------------------------------------------------------------------------*/
 /*   ITS functions                                                         */ 
 /*-------------------------------------------------------------------------*/
 
@@ -742,8 +832,12 @@ double randomGenerator_ITSGetNext(struct randomGenerator_t * rg)
          result = rg->distParam.d.its.q.q1par(alea, rg->distParam.d.its.p1);
       break;
       case 2 :
-	printf_debug(DEBUG_GENE, "two param : %f %f\n", rg->distParam.d.its.p1, rg->distParam.d.its.p2);
+         printf_debug(DEBUG_GENE, "two param : %f %f\n", rg->distParam.d.its.p1, rg->distParam.d.its.p2);
          result = rg->distParam.d.its.q.q2par(alea, rg->distParam.d.its.p1, rg->distParam.d.its.p2);
+      break;
+      case 3 :
+         printf_debug(DEBUG_GENE, "three param : %f %f %f\n", rg->distParam.d.its.p1, rg->distParam.d.its.p2, rg->distParam.d.its.p3);
+         result = rg->distParam.d.its.q.q3par(alea, rg->distParam.d.its.p1, rg->distParam.d.its.p2, rg->distParam.d.its.p3);
       break;
       default:
           motSim_error(MS_FATAL, "too many parameters");
@@ -802,6 +896,32 @@ void randomGenerator_setQuantile2Param(struct randomGenerator_t * rg,
 }
 
 /**
+ * @brief Define a distribution by its quantile function for inverse
+ * transform sampling
+ * @param rg The random generator
+ * @param q The inverse cumulative density (quantile) function
+ * @param p1 The first parameter of the quantile function
+ * @param p2 The second parameter of the quantile function
+ * @param p3 The third parameter of the quantile function
+ */
+void randomGenerator_setQuantile3Param(struct randomGenerator_t * rg,
+				       double (*q)(double x, double p1, double p2, double p3),
+				       double p1, double p2, double p3)
+{
+   printf_debug(DEBUG_GENE, "IN\n");
+
+   rg->distribution = rGDistITS;
+   rg->distParam.d.its.nbParam = 3;
+   rg->distParam.d.its.p1 = p1;
+   rg->distParam.d.its.p2 = p2;
+   rg->distParam.d.its.p3 = p3;
+   rg->distParam.d.its.q.q3par = q;
+   rg->distGetNext = randomGenerator_ITSGetNext;
+
+   printf_debug(DEBUG_GENE, "OUT\n");
+}
+
+/**
  * @brief Inverse of CDF for exponential distribution
  */
 double randomGenerator_expDistQ(double x, double lambda)
@@ -817,6 +937,13 @@ double randomGenerator_paretoDistQ(double x, double alpha, double xmin)
    return  xmin/(pow(x, 1.0/alpha));
 }
 
+/**
+ * @brief Inverse of CDF for truncated pareto distribution
+ */
+double randomGenerator_truncatedParetoDistQ(double x, double alpha, double xmin, double xmax)
+{
+   return  xmin*xmax / pow(pow(xmax, alpha) + x*pow(xmin, alpha) - x*pow(xmax, alpha), 1.0/alpha);
+}
 
 /*==========================================================================*/
 
