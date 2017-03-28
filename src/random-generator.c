@@ -145,7 +145,7 @@ struct randomGenerator_t {
 /*
  * Next value with erand48
  */
-inline double randomGenerator_erand48GetNext(struct randomGenerator_t * rg)
+static inline double randomGenerator_erand48GetNext(struct randomGenerator_t * rg)
 {
    //   double result = drand48();
    double result = erand48(rg->aleaSrc.xsubi);
@@ -173,7 +173,7 @@ void randomGenerator_erand48Init(struct randomGenerator_t * rg)
 /*
  * Next value with replay
  */
-inline double randomGenerator_replayGetNext(struct randomGenerator_t * rg)
+static inline double randomGenerator_replayGetNext(struct randomGenerator_t * rg)
 {
   return probe_exhaustiveGetSampleN(rg->values, rg->aleaSrc.nextIdx++);
 }
@@ -193,7 +193,7 @@ void randomGenerator_replayInit(struct randomGenerator_t * rg)
 /*==========================================================================*/
 /*       Les fonctions liÃ©es aux distributions.                             */
 /*==========================================================================*/
-inline double randomGenerator_noDistGetNext(struct randomGenerator_t * rg)
+static inline double randomGenerator_noDistGetNext(struct randomGenerator_t * rg)
 {
    motSim_error(MS_FATAL, "No default random distribution");
    return 0.0;
@@ -202,7 +202,7 @@ inline double randomGenerator_noDistGetNext(struct randomGenerator_t * rg)
 /*
  * Next value with uniform distribution  
  */
-inline double randomGenerator_uniformGetNext(struct randomGenerator_t * rg)
+static inline double randomGenerator_uniformGetNext(struct randomGenerator_t * rg)
 {
   return rg->aleaGetNext(rg); //Les sources sont censÃ©es Ãªtre uniformes entre 0 et 1 ...
 }

@@ -68,7 +68,7 @@ int main() {
 
    printf("mean %f (%ld samples)\n", probe_mean(pr), probe_nbSamples(pr));
 
-   tracer(pr, "Pareto tonquée", 100);
+   tracer(pr, "TruncPareto", 100);
 
    printf("*** ^C pour finir ;-)\n");
    while (1) {};

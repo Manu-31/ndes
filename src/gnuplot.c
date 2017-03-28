@@ -28,6 +28,14 @@
 #endif
 #define GPSetTermWxt "set terminal wxt"
 #define GPSetTermPng "set terminal png"
+#define GPSetTermPng "set terminal png"
+#define GPSetTermQt "set terminal qt"
+
+/*
+ * Warning : default value depends on gnuplot version
+ */
+#define GPSetTermDefault GPSetTermQt
+
 #define GPSetOutput "set output"
 
 /**
@@ -92,7 +100,7 @@ void GPSendCmd(struct gnuplot_t * gp, char * cmd)
       switch (gp->terminalType) {
          case gnuplotTerminalTypeWxt :
             sprintf(buffer, "%s %d title '%s'",
-                    GPSetTermWxt,
+                    GPSetTermDefault,
                     gp->id,
                     (gp->title)?gp->title:"Guess my name");
          break;
