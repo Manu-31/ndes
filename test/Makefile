@@ -10,6 +10,7 @@ TESTS = generators-0 generators-1 \
 	source-1 source-2 \
 	event-test \
 	truncated-pareto \
+	ipv4ping \
 #	debits \
 #	muxfcfs-1 \
 #	intconf
@@ -21,6 +22,9 @@ all : $(TESTS)
 
 tests :  $(TESTS)
 	./run-tests.sh $(TESTS)
+
+ipv4ping : ipv4ping.o ../$(SRC_DIR)/libndes.a
+	$(CC) ipv4ping.o -o ipv4ping $(LDFLAGS)
 
 truncated-pareto : truncated-pareto.o ../$(SRC_DIR)/libndes.a
 	$(CC) truncated-pareto.o -o truncated-pareto $(LDFLAGS)

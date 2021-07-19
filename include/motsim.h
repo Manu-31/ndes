@@ -134,6 +134,7 @@ void motSim_exit(int retValue);
 #define DEBUG_SCHED    0x00002000
 #define DEBUG_PDU      0x00004000
 #define DEBUG_OBJECT   0x00008000
+#define DEBUG_IPV4     0x00010000
 #define DEBUG_DVB      0x10000000
 #define DEBUG_KS       0x20000000
 #define DEBUG_MALLOC   0x40000000
@@ -163,6 +164,7 @@ static unsigned long debug_mask __attribute__ ((unused)) = 0x00000000
   //     | DEBUG_OBJECT
   //     | DEBUG_MALLOC    // L'utilisation de malloc
        | DEBUG_TBD       // Le code pas implanté
+  //     | DEBUG_IPV4      // Ma tentative de IPv4
   //     | DEBUG_ALWAYS
   ;
 
