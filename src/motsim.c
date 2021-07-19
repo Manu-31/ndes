@@ -28,7 +28,8 @@ unsigned long __totalMallocSize = 0;
  * seraient-ce pas les caractéristiques d'une simulation ?)
  */
 struct motsim_t {
-   time_t               actualStartTime;
+   //time_t               actualStartTime;
+   struct timespec            actualStartTime;
    motSimDate_t               currentTime;
    motSimDate_t               finishTime; // Heure simulée de fin prévue
    struct eventList_t * events;
@@ -182,7 +183,8 @@ void motSim_runNevents(int nbEvents)
    struct event_t * event;
 
    if (!__motSim->nbRanEvents) {
-      __motSim->actualStartTime = time(NULL);
+      //      __motSim->actualStartTime = time(NULL);
+      clock_gettime(CLOCK_REALTIME, &__motSim->actualStartTime);
    }
    while (nbEvents) {
       event = eventList_extractFirst(__motSim->events);
@@ -207,7 +209,8 @@ void motSim_runUntilTheEnd()
    struct event_t * event;
 
    if (!__motSim->nbRanEvents) {
-      __motSim->actualStartTime = time(NULL);
+      //      __motSim->actualStartTime = time(NULL);
+      clock_gettime(CLOCK_REALTIME, &__motSim->actualStartTime); 
    }
    while (1) {
       event = eventList_extractFirst(__motSim->events);
@@ -254,7 +257,8 @@ void motSim_runUntil(motSimDate_t date)
 
    __motSim->finishTime=date;
    if (!__motSim->nbRanEvents) {
-      __motSim->actualStartTime = time(NULL);
+      //      __motSim->actualStartTime = time(NULL);
+      clock_gettime(CLOCK_REALTIME, &__motSim->actualStartTime);
    }
    event = eventList_nextEvent(__motSim->events);
 
@@ -289,7 +293,6 @@ void motSim_purge()
    event = eventList_extractFirst(__motSim->events);
 
    while (event){
-
       printf_debug(DEBUG_MOTSIM, "next event at %f\n", event_getDate(event));
       assert(__motSim->currentTime <= event_getDate(event));
       __motSim->currentTime = event_getDate(event);
@@ -333,7 +336,9 @@ void motsim_addToResetList(void * data, void (*resetFunc)(void * data))
 void motSim_reset()
 {
    struct resetClient_t * resetClient;
-
+   struct timespec actualEndTime;
+   long nbSec, nbNsec;
+   
    // Les événements
    motSim_purge();
 
@@ -351,7 +356,19 @@ void motSim_reset()
    }
 
    // La simulation est considérée finie
-   probe_sample(__motSim->dureeSimulation , time(NULL) - __motSim->actualStartTime);
+   clock_gettime(CLOCK_REALTIME, &actualEndTime);
+
+   // Calcul de la durée en temps réel
+   nbSec = actualEndTime.tv_sec - __motSim->actualStartTime.tv_sec;
+   if (actualEndTime.tv_nsec > __motSim->actualStartTime.tv_nsec) {
+     nbNsec = actualEndTime.tv_nsec - __motSim->actualStartTime.tv_nsec;
+   } else {
+     nbNsec =  1000000000 - __motSim->actualStartTime.tv_nsec + actualEndTime.tv_nsec;
+     nbSec--;
+   }
+   
+   //probe_sample(__motSim->dureeSimulation , time(NULL) - __motSim->actualStartTime);
+   probe_sample(__motSim->dureeSimulation , (double)nbSec + (double)nbNsec / 1.0e9);
 }
 
 
@@ -362,6 +379,9 @@ motSimDate_t motSim_getCurrentTime()
 
 void motSim_printStatus()
 {
+   struct timespec actualEndTime;
+   long nbSec, nbNsec;
+
    printf("[MOTSI] Date = %f\n", __motSim->currentTime);
    printf("[MOTSI] Events : %ld created (%ld m + %ld r)/%ld freed\n", 
 	  event_nbCreate, event_nbMalloc, event_nbReuse, event_nbFree);
@@ -374,7 +394,18 @@ void motSim_printStatus()
 	  probe_nbSamples(PDU_releaseProbe));
    printf("[MOTSI] Total malloc'ed memory : %ld bytes\n",
 	  __totalMallocSize);
-   printf("[MOTSI] Realtime duration : %ld sec\n", time(NULL) - __motSim->actualStartTime);
+
+   // Calcul de la durée en temps réel
+   clock_gettime(CLOCK_REALTIME, &actualEndTime);
+   nbSec = actualEndTime.tv_sec - __motSim->actualStartTime.tv_sec;
+   if (actualEndTime.tv_nsec > __motSim->actualStartTime.tv_nsec) {
+     nbNsec = actualEndTime.tv_nsec - __motSim->actualStartTime.tv_nsec;
+   } else {
+     nbNsec = 1000000000 - __motSim->actualStartTime.tv_nsec + actualEndTime.tv_nsec;
+     nbSec--;
+   }
+
+   printf("[MOTSI] Realtime duration : %ld sec %ld ns\n", nbSec, nbNsec);
 }
 
 

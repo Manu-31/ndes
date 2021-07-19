@@ -11,6 +11,7 @@
 #include <stdio.h>     // printf
 #include <stdlib.h>    // Malloc, NULL, exit...
 #include <strings.h>   // bzero
+#include <string.h>    // memcpy
 #include <math.h>      // log
 #include <values.h>    // *_MAX
 
@@ -165,7 +166,14 @@ void randomGenerator_erand48Init(struct randomGenerator_t * rg)
    assert(rg->source == rGSourceErand48);
 
    gettimeofday(&now, NULL);
-   bcopy(&now + sizeof(now) - sizeof(rg->aleaSrc.xsubi), rg->aleaSrc.xsubi, sizeof(rg->aleaSrc.xsubi));
+   memcpy(rg->aleaSrc.xsubi,
+	 &now + sizeof(now) - sizeof(rg->aleaSrc.xsubi),
+	 sizeof(rg->aleaSrc.xsubi));
+   /*
+   bcopy(&now + sizeof(now) - sizeof(rg->aleaSrc.xsubi),
+	 rg->aleaSrc.xsubi,
+	 sizeof(rg->aleaSrc.xsubi));
+   */
    rg->aleaGetNext = randomGenerator_erand48GetNext;
 
 }

@@ -265,9 +265,10 @@ int gnuplotProcessCreate()
  * programme (par un on_exitGnuplot)
  */
 #define BUFFER_LENGTH 4096
+#define FILENAME_LENGTH 256
 int gnuplot_displayProbe(struct gnuplot_t * gp, int with, struct probe_t * probe)
 {
-   char fileName[BUFFER_LENGTH];   
+   char fileName[FILENAME_LENGTH];   
    struct fileName_t * p;
    int  fd;
    char cmd[BUFFER_LENGTH];
@@ -345,7 +346,7 @@ int gnuplot_displayProbe(struct gnuplot_t * gp, int with, struct probe_t * probe
 
 int gnuplot_displayProbes(struct gnuplot_t * gp, int with, ...)
 {
-   char fileName[BUFFER_LENGTH];   
+   char fileName[FILENAME_LENGTH];   
    struct fileName_t * p;
    int  fd;
    char cmd[BUFFER_LENGTH];

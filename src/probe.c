@@ -441,7 +441,7 @@ void probe_timeSliceNextEvent(struct probe_t * tap)
 void probe_sampleExhaustive(struct probe_t * probe, double value);
 void probe_periodicNextEvent(struct probe_t * pr)
 {
-   assert (pr->probeType = periodicProbeType);
+   assert (pr->probeType == periodicProbeType);
 
    printf_debug(DEBUG_PROBE_VERB, "periodic \"%s\" sampling %f\n", probe_getName(pr), pr->lastSample);
    probe_sample(pr->data.periodic->data, pr->lastSample);

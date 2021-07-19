@@ -128,7 +128,7 @@ void TUNDevice_poll(struct TUNDevice_t * td)
    bytesRead = read(td->fd, buffer, BUFFLEN);
 
    if (bytesRead > 0) {
-      printf_debug(DEBUG_ALWAYS, "Paquet de %d octets ...\n", bytesRead);
+      printf_debug(DEBUG_ALWAYS, "Paquet de %ld octets ...\n", bytesRead);
    }
 
    // On construit une PDU qui contient le paquet

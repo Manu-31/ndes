@@ -263,17 +263,17 @@ struct filePDU_t * schedACM_getInputQueue(struct schedACM_t * sched, int mc, int
 /*
  * Peut-on faire du "déclassement" ?
  */
-inline int schedACM_getReclassification(struct schedACM_t * sched);
+int schedACM_getReclassification(struct schedACM_t * sched);
 
 /*
  * Obtention d'un pointeur sur une des QoS
  */
-inline t_qosMgt * schedACM_getQoS(struct schedACM_t * sched, int mc, int qos);
+t_qosMgt * schedACM_getQoS(struct schedACM_t * sched, int mc, int qos);
 
 /*
  * Obtention d'un pointeur sur le lien
  */
-inline struct DVBS2ll_t * schedACM_getACMLink(struct schedACM_t * sched);
+struct DVBS2ll_t * schedACM_getACMLink(struct schedACM_t * sched);
 
 /*
  * Obtention d'un pointeur vers une sonde
