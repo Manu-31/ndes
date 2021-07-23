@@ -11,6 +11,7 @@ TESTS = generators-0 generators-1 \
 	event-test \
 	truncated-pareto \
 	ipv4ping \
+	clocktest \
 #	debits \
 #	muxfcfs-1 \
 #	intconf
@@ -22,6 +23,9 @@ all : $(TESTS)
 
 tests :  $(TESTS)
 	./run-tests.sh $(TESTS)
+
+clocktest : clocktest.o ../$(SRC_DIR)/libndes.a
+	$(CC) clocktest.o -o clocktest $(LDFLAGS)
 
 ipv4ping : ipv4ping.o ../$(SRC_DIR)/libndes.a
 	$(CC) ipv4ping.o -o ipv4ping $(LDFLAGS)

@@ -82,28 +82,25 @@ struct event_t * event_create(void (*run)(void *data), void * data)
    return result;
 }
 
-/*
 struct event_t * event_periodicCreate(void (*run)(void *data), void * data, motSimDate_t date, motSimDate_t period)
 {
    struct event_t * result;
 
-   result = event_create(run, data, date);
+   result = event_create(run, data);
 
    result->type = EVENT_PERIODIC;
    result->period = period;
 
    return result;
 }
-*/
+
 /*
  * La même, avec insersion dans le simulateur
  */
-/*
 void event_periodicAdd(void (*run)(void *data), void * data, motSimDate_t date, motSimDate_t period)
 {
   motSim_scheduleEvent(event_periodicCreate(run, data, date, period), date);
 }
-*/
 
 void free_event(struct event_t * ev)
 {

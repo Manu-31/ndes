@@ -21,6 +21,11 @@
 #include <stdio.h>   // printf
 #include <stdlib.h>  // malloc
 
+/**
+ * @brief Il peut être parfois intéressant d'essayer de maintenir en
+ * cohérence le temps simulé sur le temps de l'horloge.
+ */
+#define SYNCHRONIZE_CLOCK
 
 #define min(a, b) ((a)<(b)?(a):(b))
 #define max(a, b) ((a)>(b)?(a):(b))
@@ -107,7 +112,6 @@ void motSim_exit(int retValue);
 
 /*
  * Les outils de debogage
-
  */
 #ifdef  DEBUG_NDES
 #include <stdio.h>
@@ -116,55 +120,58 @@ void motSim_exit(int retValue);
    if ((lvl)& debug_mask)                    \
       printf("[%6.3f ms] %s - " fmt, 1000.0*motSim_getCurrentTime() , __FUNCTION__ , ## args)
 
-#define DEBUG_EVENT    0x00000001
-#define DEBUG_MOTSIM   0x00000002
-#define DEBUG_GENE     0x00000004
-#define DEBUG_TBD      0x00000008
-#define DEBUG_FILE     0x00000010
-#define DEBUG_SRV      0x00000020
-#define DEBUG_SRC      0x00000040
-#define DEBUG_GNUPLOT  0x00000080
+#define DEBUG_EVENT       0x00000001
+#define DEBUG_MOTSIM      0x00000002
+#define DEBUG_GENE        0x00000004
+#define DEBUG_TBD         0x00000008
+#define DEBUG_FILE        0x00000010
+#define DEBUG_SRV         0x00000020
+#define DEBUG_SRC         0x00000040
+#define DEBUG_GNUPLOT     0x00000080
 
-#define DEBUG_MUX      0x00000100
-#define DEBUG_PROBE         0x00000200
-#define DEBUG_PROBE_VERB    0x00000400
-#define DEBUG_WARN     0x00000800
+#define DEBUG_MUX         0x00000100
+#define DEBUG_PROBE       0x00000200
+#define DEBUG_PROBE_VERB  0x00000400
+#define DEBUG_WARN        0x00000800
 
-#define DEBUG_ACM      0x00001000
-#define DEBUG_SCHED    0x00002000
-#define DEBUG_PDU      0x00004000
-#define DEBUG_OBJECT   0x00008000
-#define DEBUG_IPV4     0x00010000
-#define DEBUG_DVB      0x10000000
-#define DEBUG_KS       0x20000000
-#define DEBUG_MALLOC   0x40000000
-#define DEBUG_KS_VERB  0x80000000
+#define DEBUG_ACM         0x00001000
+#define DEBUG_SCHED       0x00002000
+#define DEBUG_PDU         0x00004000
+#define DEBUG_OBJECT      0x00008000
+#define DEBUG_IPV4        0x00010000
+#define DEBUG_CLOCK       0x00020000  // Pour synchroniser les horloges
 
-#define DEBUG_ALWAYS   0xFFFFFFFF
-#define DEBUG_NEVER    0x00000000
+#define DEBUG_DVB         0x10000000
+#define DEBUG_KS          0x20000000
+#define DEBUG_MALLOC      0x40000000
+#define DEBUG_KS_VERB     0x80000000
+
+#define DEBUG_ALWAYS      0xFFFFFFFF
+#define DEBUG_NEVER       0x00000000
 
 static unsigned long debug_mask __attribute__ ((unused)) = 0x00000000
-  //     | DEBUG_EVENT     // Les événements (lourd !)
-  //     | DEBUG_MOTSIM    // Le moteur
-  //     | DEBUG_GENE      // Les générateurs de nombre/date/...
-  //     | DEBUG_SRV       // Le serveur
-  //     | DEBUG_SRC       // La source
-  //     | DEBUG_FILE      // La gestion des files
+  //     | DEBUG_EVENT      // Les événements (lourd !)
+  //     | DEBUG_MOTSIM     // Le moteur
+  //     | DEBUG_GENE       // Les générateurs de nombre/date/...
+  //     | DEBUG_SRV        // Le serveur
+  //     | DEBUG_SRC        // La source
+  //     | DEBUG_FILE       // La gestion des files
   //     | DEBUG_GNUPLOT
   //     | DEBUG_MUX
   //     | DEBUG_PROBE
   //     | DEBUG_PROBE_VERB
-  //     | DEBUG_DVB       // Les outils DVB
-  //     | DEBUG_KS        // L'algorithme Knapsack
-  //     | DEBUG_KS_VERB   // L'algorithme Knapsack verbeux
-  //     | DEBUG_WARN      // Des infos qui peuvent aider à debuger la SIMU
+  //     | DEBUG_DVB        // Les outils DVB
+  //     | DEBUG_KS         // L'algorithme Knapsack
+  //     | DEBUG_KS_VERB    // L'algorithme Knapsack verbeux
+  //     | DEBUG_WARN       // Des infos qui peuvent aider à debuger la SIMU
   //     | DEBUG_ACM
-  //     | DEBUG_SCHED  // Les ordonnanceurs
+  //     | DEBUG_SCHED      // Les ordonnanceurs
   //     | DEBUG_PDU
   //     | DEBUG_OBJECT
-  //     | DEBUG_MALLOC    // L'utilisation de malloc
-       | DEBUG_TBD       // Le code pas implanté
-  //     | DEBUG_IPV4      // Ma tentative de IPv4
+  //     | DEBUG_MALLOC     // L'utilisation de malloc
+       | DEBUG_TBD          // Le code pas implanté
+       | DEBUG_CLOCK        // Synchronisation des horloges
+  //     | DEBUG_IPV4       // Ma tentative de IPv4
   //     | DEBUG_ALWAYS
   ;
 

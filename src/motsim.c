@@ -28,13 +28,15 @@ unsigned long __totalMallocSize = 0;
  * seraient-ce pas les caractéristiques d'une simulation ?)
  */
 struct motsim_t {
-   //time_t               actualStartTime;
-   struct timespec            actualStartTime;
-   motSimDate_t               currentTime;
-   motSimDate_t               finishTime; // Heure simulée de fin prévue
-   struct eventList_t * events;
-   int                  nbInsertedEvents;
-   int                  nbRanEvents;
+#ifdef SYNCHRONIZE_CLOCK	 
+   struct timespec        actualStartTime;
+   struct probe_t       * clockDrift; // Pour mesurer la concordance des horloges
+#endif
+   motSimDate_t           currentTime;
+   motSimDate_t           finishTime; // Heure simulée de fin prévue
+   struct eventList_t   * events;
+   int                    nbInsertedEvents;
+   int                    nbRanEvents;
 
    struct probe_t       * dureeSimulation;
    struct resetClient_t * resetClient;
@@ -127,10 +129,17 @@ void motSim_create()
    sigaction(SIGALRM, &act,NULL);
 
    printf_debug(DEBUG_MOTSIM, "creation des sondes systeme\n");
+
    // Calcul de la durée moyenne des simulations
    __motSim->dureeSimulation = probe_createExhaustive();
    probe_setPersistent(__motSim->dureeSimulation);
 
+   // Arrive-t-on a garder les horloges cohérentes ?
+#ifdef SYNCHRONIZE_CLOCK
+   __motSim->clockDrift = probe_createMean();
+   probe_setName(__motSim->clockDrift, "clock drift");
+#endif
+   
    // Les sondes systeme
    PDU_createProbe = probe_createMean();
    probe_setName(PDU_createProbe, "created PDUs");
@@ -178,10 +187,64 @@ void motSim_scheduleNewEvent(void (*run)(void *data), void * data, motSimDate_t 
   motSim_scheduleEvent(event_create(run, data), date);
 }
 
+/**
+ * @brief Pause execution until wall clock >= simulatedTime
+ * @param simulatedTime date of next event
+ * @return wall clock time (in second from start of simulation)
+ */
+static inline double waitForActualClock(motSimDate_t simulatedTime)
+{
+   struct timespec actualCurrentTime;
+   long nbSec, nbNsec;
+   useconds_t avance;
+   double dureeReelle, result;
+   
+   // Depuis combien de temps dure la simuation ?
+   //    Date actuelle
+   clock_gettime(CLOCK_REALTIME, &actualCurrentTime);
+
+   //    Calcul de la durée écoulée depuis le début 
+   nbSec = actualCurrentTime.tv_sec - __motSim->actualStartTime.tv_sec;
+   if (actualCurrentTime.tv_nsec >= __motSim->actualStartTime.tv_nsec) {
+      nbNsec = actualCurrentTime.tv_nsec - __motSim->actualStartTime.tv_nsec;
+   } else {
+      nbNsec = 1000000000 - __motSim->actualStartTime.tv_nsec + actualCurrentTime.tv_nsec;
+      nbSec--;
+   }
+   dureeReelle = ((double)nbSec + (double)nbNsec / 1.0e9);
+   if (dureeReelle < simulatedTime) {
+     printf_debug(DEBUG_CLOCK, "%f réel en avance sur %f simulé\n", dureeReelle, simulatedTime);
+
+     avance = (useconds_t)(1000000.0 * (simulatedTime - dureeReelle));
+     usleep((useconds_t)avance);
+
+     // La suite est pour débuguer !
+     clock_gettime(CLOCK_REALTIME, &actualCurrentTime);
+
+     // Calcul de la durée en temps réel
+     nbSec = actualCurrentTime.tv_sec - __motSim->actualStartTime.tv_sec;
+     if (actualCurrentTime.tv_nsec >= __motSim->actualStartTime.tv_nsec) {
+        nbNsec = actualCurrentTime.tv_nsec - __motSim->actualStartTime.tv_nsec;
+     } else {
+        nbNsec = 1000000000 - __motSim->actualStartTime.tv_nsec + actualCurrentTime.tv_nsec;
+        nbSec--;
+     }
+     // Fin du debug
+    
+   } else {
+     printf_debug(DEBUG_NEVER, "%f réel en retard sur %f simulé\n", ((double)nbSec + (double)nbNsec / 1.0e9), simulatedTime);
+   }
+
+   // Pour le debug
+   result = (double)nbSec + (double)nbNsec / 1.0e9;
+   return result;
+}
+
 void motSim_runNevents(int nbEvents)
 {
    struct event_t * event;
-
+   double wallCl;
+   
    if (!__motSim->nbRanEvents) {
       //      __motSim->actualStartTime = time(NULL);
       clock_gettime(CLOCK_REALTIME, &__motSim->actualStartTime);
@@ -192,9 +255,20 @@ void motSim_runNevents(int nbEvents)
          nbEvents--;
          printf_debug(DEBUG_EVENT, "next event (%p) at %f\n", event, event_getDate(event));
          assert(__motSim->currentTime <= event_getDate(event));
+
+	 // On avance l'horloge virtuelle du moteur
          __motSim->currentTime = event_getDate(event);
+
+#ifdef SYNCHRONIZE_CLOCK	 
+	 // Essayons d'accorder les horloges ...
+	 wallCl = waitForActualClock(__motSim->currentTime);
+         printf_debug(DEBUG_CLOCK, "run event (%p) at %f (clock %f)\n", event, event_getDate(event), wallCl);
+         probe_sample(__motSim->clockDrift , __motSim->currentTime - wallCl);
+#endif
+	 // On lance un événement de plus
          event_run(event);
          __motSim->nbRanEvents ++;
+	 
       } else {
          printf_debug(DEBUG_MOTSIM, "no more event !\n");
          return ;
@@ -207,7 +281,8 @@ void motSim_runNevents(int nbEvents)
 void motSim_runUntilTheEnd()
 {
    struct event_t * event;
-
+   double wallCl __attribute__((unused));
+   
    if (!__motSim->nbRanEvents) {
       //      __motSim->actualStartTime = time(NULL);
       clock_gettime(CLOCK_REALTIME, &__motSim->actualStartTime); 
@@ -217,7 +292,15 @@ void motSim_runUntilTheEnd()
       if (event) {
          printf_debug(DEBUG_EVENT, "next event (out of %d) at %f\n", eventList_getLength(__motSim->events), event_getDate(event));
          assert(__motSim->currentTime <= event_getDate(event));
+
+	 // On avance l'horloge virtuelle du moteur
          __motSim->currentTime = event_getDate(event);
+
+#ifdef SYNCHRONIZE_CLOCK	 
+	 // Essayons d'accorder les horloges ...
+	 wallCl = waitForActualClock(__motSim->currentTime);
+         probe_sample(__motSim->clockDrift , __motSim->currentTime - wallCl);
+#endif
          event_run(event);
          __motSim->nbRanEvents ++;
          printf_debug(DEBUG_EVENT, "now %d events left\n", eventList_getLength(__motSim->events));
@@ -305,7 +388,6 @@ void motSim_purge()
       event = eventList_extractFirst(__motSim->events);
    }
    printf_debug(DEBUG_MOTSIM, "no more event\n");
-
 }
 
 /*
@@ -406,6 +488,10 @@ void motSim_printStatus()
    }
 
    printf("[MOTSI] Realtime duration : %ld sec %ld ns\n", nbSec, nbNsec);
+   // Arrive-t-on a garder les horloges cohérentes ?
+#ifdef SYNCHRONIZE_CLOCK
+   printf("[MOTSI] Clock drift %f ms\n", 1000.0*probe_mean(__motSim->clockDrift));
+#endif
 }
 
 
