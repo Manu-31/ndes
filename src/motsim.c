@@ -216,8 +216,19 @@ static inline double waitForActualClock(motSimDate_t simulatedTime)
      printf_debug(DEBUG_CLOCK, "%f réel en avance sur %f simulé\n", dureeReelle, simulatedTime);
 
      avance = (useconds_t)(1000000.0 * (simulatedTime - dureeReelle));
+     printf_debug(DEBUG_CLOCK, "avance de %d\n", avance);
+
+     // Soucis avec usleep(n) si n > 1 000 000
+     if (avance > 1000000) {
+        printf_debug(DEBUG_CLOCK, "dodo de %d\n", avance/1000000);
+        sleep(avance/100000);
+	avance = avance % 1000000;
+     }        
+     printf_debug(DEBUG_CLOCK, "udodo de %d\n", avance);
      usleep((useconds_t)avance);
 
+     printf_debug(DEBUG_CLOCK, "dodo fini\n");
+     
      // La suite est pour débuguer !
      clock_gettime(CLOCK_REALTIME, &actualCurrentTime);
 
@@ -234,7 +245,7 @@ static inline double waitForActualClock(motSimDate_t simulatedTime)
    } else {
      printf_debug(DEBUG_NEVER, "%f réel en retard sur %f simulé\n", ((double)nbSec + (double)nbNsec / 1.0e9), simulatedTime);
    }
-
+   printf_debug(DEBUG_ALWAYS, "out\n");
    // Pour le debug
    result = (double)nbSec + (double)nbNsec / 1.0e9;
    return result;

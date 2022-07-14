@@ -124,7 +124,7 @@ void TUNDevice_poll(struct TUNDevice_t * td)
    printf_debug(DEBUG_IPV4, "in\n");
 
    // On va chercher un paquet s'il y en a un
-   buffer = malloc(BUFFLEN); // WARNING utiliser les primitices d'alloc
+   buffer = malloc(BUFFLEN); // WARNING utiliser les primitives d'alloc
    bytesRead = read(td->fd, buffer, BUFFLEN);
 
    if (bytesRead > 0) {
@@ -133,12 +133,14 @@ void TUNDevice_poll(struct TUNDevice_t * td)
 
    // On construit une PDU qui contient le paquet
    if (bytesRead > 0) {
-      td->pdu = PDU_create(0, buffer);
+      td->pdu = PDU_create(bytesRead, buffer);
    } else {
       free(buffer);  // WARNING utiliser les primitices d'alloc
    }
    
    // On prévient la destination s'il y a un paquet
+   // WARNING : il faudrait choisir le destinataire en fonction
+   // du protocole (IPv4, IPv6, ...)
    if ((td->pdu) && (td->destProcessPDU) && (td->destination)) {
       printf_debug(DEBUG_ALWAYS, "On transmet !\n");
       (void)td->destProcessPDU(td->destination,
@@ -158,13 +160,24 @@ void TUNDevice_poll(struct TUNDevice_t * td)
    printf_debug(DEBUG_IPV4, "out\n");
 }
 
+/*
+ * Pointeur, taille, message
+ */
+#define DUMP_PACKET(p, t, m)                   \
+  printf("<< DUMP %d bytes (%s) >>\n", t, m);   \
+   for (int i = 0; i < t; i++){                \
+      printf("%2x ", ((unsigned char *)p)[i]); \
+      if (!((i+1)%8)) printf("\n");            \
+   }                                           \
+
+
 /**
  * @brief Traitement d'une PDU
  */
 int TUNDevice_processPDU(void * s, getPDU_t getPDU, void * source)
 {
    printf_debug(DEBUG_IPV4, "in\n");
-  
+   
    struct TUNDevice_t * TUNDev = (struct TUNDevice_t * )s;
    struct PDU_t * pdu = getPDU(source);
 
@@ -174,11 +187,14 @@ int TUNDevice_processPDU(void * s, getPDU_t getPDU, void * source)
       return 1;
    }
 
+   DUMP_PACKET(PDU_private(pdu), PDU_size(pdu), "Paquet IP");
+
    // WARNING : gros bricolage !
-   write(TUNDev->fd, PDU_private(pdu), BUFFLEN);
+   write(TUNDev->fd, PDU_private(pdu), PDU_size(pdu));
+
+   printf_debug(DEBUG_IPV4, "out\n");
 
    return 0; // WARNING à vérifier
-   printf_debug(DEBUG_IPV4, "out\n");
 }
 
 /**

@@ -11,6 +11,7 @@ TESTS = generators-0 generators-1 \
 	event-test \
 	truncated-pareto \
 	ipv4ping \
+	ipv4echoreply \
 	clocktest \
 #	debits \
 #	muxfcfs-1 \
@@ -29,6 +30,9 @@ clocktest : clocktest.o ../$(SRC_DIR)/libndes.a
 
 ipv4ping : ipv4ping.o ../$(SRC_DIR)/libndes.a
 	$(CC) ipv4ping.o -o ipv4ping $(LDFLAGS)
+
+ipv4echoreply : ipv4echoreply.o ../$(SRC_DIR)/libndes.a
+	$(CC) ipv4echoreply.o -o ipv4echoreply $(LDFLAGS)
 
 truncated-pareto : truncated-pareto.o ../$(SRC_DIR)/libndes.a
 	$(CC) truncated-pareto.o -o truncated-pareto $(LDFLAGS)

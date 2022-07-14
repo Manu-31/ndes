@@ -171,8 +171,8 @@ static unsigned long debug_mask __attribute__ ((unused)) = 0x00000000
   //     | DEBUG_MALLOC     // L'utilisation de malloc
        | DEBUG_TBD          // Le code pas implanté
        | DEBUG_CLOCK        // Synchronisation des horloges
-  //     | DEBUG_IPV4       // Ma tentative de IPv4
-  //     | DEBUG_ALWAYS
+       | DEBUG_IPV4       // Ma tentative de IPv4
+  //       | DEBUG_ALWAYS
   ;
 
 #else
