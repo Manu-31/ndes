@@ -5,8 +5,10 @@
  * A faire
  *   . tout !
  */
+#include <arpa/inet.h>  // ntoh
 #include <stdint.h>     // uint8_t and friends
 #include <string.h>     // memcpy
+
 #include <ndesObject.h>
 #include <pdu.h>
 #include <icmpv4.h>
@@ -155,14 +157,19 @@ int ICMPv4_processThisPDU(struct ICMPv4_t * icmpv4,
    // C'est une réponse ICMPv4
    msgReponse->header.type = ICMP_TYPE_ECHO_REPLY;
    msgReponse->header.code = 0;
-   
+
+   // Calcul du checksum
+   msgReponse->header.checksum = 0;
+   msgReponse->header.checksum =
+     IPv4_buildChecksum((unsigned short *)&(msgReponse->header),
+			PDU_size(pdu));
+
    // On met la réponse dans une PDU
    pduReponse = PDU_create(PDU_size(pdu), msgReponse);
 
    // On la transmet à IP avec comme adresse destination celle de
    // l'émetteur du message reçu
    IPv4_sendPacket(icmpv4->ipv4, srcAddr, IP_PROTO_ICMP, pduReponse);
-
 
    return 0;
 }

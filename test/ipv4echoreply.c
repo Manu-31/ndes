@@ -1,6 +1,10 @@
 /**
  * @brief Demonstration de la communication des outils IPv4 avec le
  * "monde réel"
+ *
+ * Ce petit programme crée une interface tun (dont il affiche le nom)
+ * puis il attend d'y recevoir des echo request auxquels il répond. Il
+ * utilise l'adresse IPv4 définie ci-dessous.
  */
 
 #include <ipv4.h>
@@ -11,6 +15,7 @@
 
 int main() {
    struct IPv4_t            * ipv4;
+   __attribute__((unused))  // La structure icmpv4 est nécessaire !
    struct ICMPv4_t          * icmpv4;
    struct TUNDevice_t       * TUNDev;     // Pour injecter sur le système
 

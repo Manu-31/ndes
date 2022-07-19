@@ -3,10 +3,12 @@
  * @brief Quelques essais d'implantation de IP
  *
  * A faire
- *   . séparer IP de ICMP
+ *   . Attention on ne gère pas les options IP !!!
  *   . un dateGen par défaut qui envoie un ping chaque seconde
  *   . tout !
  */
+#include <arpa/inet.h>  // ntoh
+
 #include <event.h>
 
 #include <ipv4.h>
@@ -19,8 +21,13 @@
  *
  */
 struct iphdr {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+   uint8_t ihl : 4;
+   uint8_t version : 4;
+#else
    uint8_t version : 4;
    uint8_t ihl : 4;
+#endif
    uint8_t tos;
    uint16_t len;
    uint16_t id;
@@ -42,7 +49,32 @@ struct IPv4Packet {
    struct iphdr header;
    unsigned char data[0];
 };
-  
+
+/**
+ * @brief Affichage d'un paquet IPv4
+ */
+inline static void IPv4Packet_print(struct IPv4Packet* p)
+{
+   printf_debug(DEBUG_IPV4, "--------<paquet ipv4>---------\n");
+   printf_debug(DEBUG_IPV4, "v=%d, hl=%d, tos=%d, lg=%d\n",
+	  p->header.version, p->header.ihl, p->header.tos, ntohs(p->header.len));
+   printf_debug(DEBUG_IPV4, "ttl=%d, proto=%d\n", p->header.ttl, p->header.proto);
+   printf_debug(DEBUG_IPV4, "sa=%d.%d.%d.%d  ",
+	  (ntohl(p->header.saddr)>>24)&0xff,
+	  (ntohl(p->header.saddr)>>16)&0xff,
+	  (ntohl(p->header.saddr)>> 8)&0xff,
+	  (ntohl(p->header.saddr)    )&0xff
+	  );
+   printf_debug(DEBUG_IPV4, "da=%d.%d.%d.%d\n",
+	  (ntohl(p->header.daddr)>>24)&0xff,
+	  (ntohl(p->header.daddr)>>16)&0xff,
+	  (ntohl(p->header.daddr)>> 8)&0xff,
+	  (ntohl(p->header.daddr)    )&0xff
+	  );
+   printf_debug(DEBUG_IPV4, "csum = 0x%x\n", p->header.csum);
+   printf_debug(DEBUG_IPV4, "------------------------------\n");
+}
+
 /**
  * @brief Définition d'une entité IPv4
  */
@@ -110,12 +142,38 @@ struct PDU_t * IPv4_getNextPDU(void * src)
    return pdu;
 }
 
+
+/**
+ * @brief Traitement d'une PDU
+ * Code repris de RFC1071, section 4.1
+ */
+unsigned short IPv4_buildChecksum(unsigned short * addr, short count)
+{
+   unsigned long sum = 0;
+
+   while( count > 1 )  {
+      /*  This is the inner loop */
+      sum += * addr++;
+      count -= 2;
+   }
+
+   /*  Add left-over byte, if any */
+   if( count > 0 )
+       sum += * (unsigned char *) addr;
+
+      /*  Fold 32-bit sum to 16 bits */
+   while (sum>>16)
+      sum = (sum & 0xffff) + (sum >> 16);
+
+   return (unsigned short) ~sum;     
+}
+
 /**
  * @brief Traitement d'une PDU
  */
 int IPv4_processPDU(void * s, getPDU_t getPDU, void * source)
 {
-   printf_debug(DEBUG_ALWAYS, "in\n");
+   printf_debug(DEBUG_IPV4, "in\n");
   
    struct IPv4_t     * ipv4 = (struct IPv4_t * )s;
    struct PDU_t      * pduIn;
@@ -127,23 +185,26 @@ int IPv4_processPDU(void * s, getPDU_t getPDU, void * source)
    
    // Si c'est juste pour tester si je suis pret
    if ((getPDU == NULL) || (source == NULL)) { 
-      printf_debug(DEBUG_ALWAYS, "getPDU and source should now be non NULL\n");
+      printf_debug(DEBUG_IPV4, "getPDU and source should now be non NULL\n");
       return 1;
    }
 
    // On récupère la PDU sur la source
-   printf_debug(DEBUG_ALWAYS, "On va chercher\n");
+   printf_debug(DEBUG_IPV4, "On va chercher\n");
    pduIn = getPDU(source);
 
    // Puisque c'est un paquet IPv4, le champ private est un struct IPv4Packet *
    packet = (struct IPv4Packet *)PDU_private(pduIn);
 
+   IPv4Packet_print(packet);
+
    // On peut déterminer l'adresse IP source
-   srcAddr = packet->header.saddr;
+   srcAddr = ntohl(packet->header.saddr);
    
    // On crée une nouvelle PDU avec le contenu. Pas très
    // efficace, mais tellement plus simple. Un jour il faudra
    // faire comme les socket buffer de Linux.
+   // WARNING la taille ne prend pas en compte les options IP !!
    payload = malloc(PDU_size(pduIn) - sizeof(struct iphdr));
    memcpy(payload, &(packet->data[0]), PDU_size(pduIn) - sizeof(struct iphdr));
    pdu = PDU_create(PDU_size(pduIn) - sizeof(struct iphdr), payload);
@@ -167,32 +228,8 @@ int IPv4_processPDU(void * s, getPDU_t getPDU, void * source)
 	 return 1;
       break;
    }
-   /*
-   printf_debug(DEBUG_ALWAYS, "On crée une réponse\n");
-   // On crée une PDU de réponse
-   pduOut = PDU_create(PDU_size(pduIn), PDU_private(pduIn));
-
-   // On détruit la PDU entrante
-   PDU_free(pduIn);
-
-   printf_debug(DEBUG_ALWAYS, "On permute les adreses\n");
    
-   // On va permuter les adresses source et dest
-   struct iphdr * h = (struct iphdr *)PDU_private(pduOut);
-   a = h->saddr;
-   h->saddr = h->daddr;
-   h->daddr = a;
-
-   ipv4->pdu = pduOut;
-
-   printf_debug(DEBUG_ALWAYS, "On va transmettre\n");
-   
-   // On envoie
-   (void)ipv4->destProcessPDU(ipv4->destination,
-                              (getPDU_t)IPv4_getNextPDU,
-                              ipv4);
-   */
-   printf_debug(DEBUG_ALWAYS, "out\n");
+   printf_debug(DEBUG_IPV4, "out\n");
    
    return 1;
 }
@@ -213,24 +250,33 @@ void IPv4_setICMP(struct IPv4_t * ipv4, struct ICMPv4_t * icmpv4)
  * supérieure pour transmettre. 
  */
 void IPv4_sendPacket(struct IPv4_t * ipv4,
-		     uint32_t destAddr,
-		     uint8_t proto,
-		     struct PDU_t * payload)
+		     uint32_t        destAddr,
+		     uint8_t         proto,
+		     struct PDU_t  * payload)
 {
    struct IPv4Packet * p = (struct IPv4Packet *)malloc(sizeof(struct iphdr)+PDU_size(payload));
 
    printf_debug(DEBUG_IPV4, "in\n");
 
-   // Initialisation des chmaps
+   // Initialisation des champs
    p->header.version = 4;
    p->header.ihl= 5;
    p->header.proto = proto;
-   p->header.saddr = ipv4->address;
-   p->header.daddr = destAddr;
+   p->header.saddr = htonl(ipv4->address);
+   p->header.daddr = htonl(destAddr);
+   p->header.len = htons(sizeof(struct iphdr)+PDU_size(payload));
+   p->header.ttl = htons(42);
 
+   // Calcul du checksum
+   p->header.csum = 0;
+   p->header.csum = IPv4_buildChecksum((unsigned short *)&(p->header),
+				       4*p->header.ihl);
+   
    // Copie de la charge utile
    memcpy(&(p->data), PDU_private(payload), PDU_size(payload));
 
+   IPv4Packet_print(p);
+   
    // La PDU est prête, ...
    ipv4->pdu = PDU_create(sizeof(struct iphdr) + PDU_size(payload), p);
    

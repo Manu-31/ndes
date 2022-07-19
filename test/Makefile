@@ -13,8 +13,8 @@ TESTS = generators-0 generators-1 \
 	ipv4ping \
 	ipv4echoreply \
 	clocktest \
-#	debits \
-#	muxfcfs-1 \
+	muxfcfs-1 \
+	debits \
 #	intconf
 
 

@@ -1,4 +1,7 @@
-/*
+/**
+ * @file : muxfcfs.c
+ * @brief : Implantation d'un multiplexeur FCFS
+ *
  * Un "multiplexeur FCFS" permet d'associer une destination unique à
  * un nombre quelconque de sources.
  * 

@@ -16,6 +16,17 @@
 #include <tun-dev.h>
 #include <event.h>
 
+/*
+ * Pointeur, taille, message
+ */
+#define DUMP_PACKET(p, t, m)                   \
+   printf_debug(DEBUG_TUN, "<< DUMP %d bytes (%s) >>\n", t, m);   \
+   for (int i = 0; i < t; i++){                \
+      printf_debug(DEBUG_TUN, "%2x ", ((unsigned char *)p)[i]); \
+      if (!((i+1)%8)) printf_debug(DEBUG_TUN, "\n");            \
+   }                                           \
+
+
 /**
  * @brief Structure d'un TUN device
  */
@@ -99,12 +110,12 @@ struct TUNDevice_t * TUNDevice_create(double period,
  */
 struct PDU_t * TUNDevice_getNextPacket(struct TUNDevice_t * td)
 {
-   printf_debug(DEBUG_ALWAYS, "in\n");
+   printf_debug(DEBUG_TUN, "in\n");
    struct PDU_t * result = td->pdu;
 
    td->pdu = NULL;
 
-   printf_debug(DEBUG_ALWAYS, "out\n");
+   printf_debug(DEBUG_TUN, "out\n");
    return result;
 }
 
@@ -128,9 +139,10 @@ void TUNDevice_poll(struct TUNDevice_t * td)
    bytesRead = read(td->fd, buffer, BUFFLEN);
 
    if (bytesRead > 0) {
-      printf_debug(DEBUG_ALWAYS, "Paquet de %ld octets ...\n", bytesRead);
+      printf_debug(DEBUG_TUN, "Paquet de %ld octets ...\n", bytesRead);
+      DUMP_PACKET(buffer, (int)bytesRead, __FUNCTION__);
    }
-
+   
    // On construit une PDU qui contient le paquet
    if (bytesRead > 0) {
       td->pdu = PDU_create(bytesRead, buffer);
@@ -142,7 +154,7 @@ void TUNDevice_poll(struct TUNDevice_t * td)
    // WARNING : il faudrait choisir le destinataire en fonction
    // du protocole (IPv4, IPv6, ...)
    if ((td->pdu) && (td->destProcessPDU) && (td->destination)) {
-      printf_debug(DEBUG_ALWAYS, "On transmet !\n");
+      printf_debug(DEBUG_TUN, "On transmet !\n");
       (void)td->destProcessPDU(td->destination,
 			       (getPDU_t)TUNDevice_getNextPacket,
 			       td);
@@ -160,16 +172,6 @@ void TUNDevice_poll(struct TUNDevice_t * td)
    printf_debug(DEBUG_IPV4, "out\n");
 }
 
-/*
- * Pointeur, taille, message
- */
-#define DUMP_PACKET(p, t, m)                   \
-  printf("<< DUMP %d bytes (%s) >>\n", t, m);   \
-   for (int i = 0; i < t; i++){                \
-      printf("%2x ", ((unsigned char *)p)[i]); \
-      if (!((i+1)%8)) printf("\n");            \
-   }                                           \
-
 
 /**
  * @brief Traitement d'une PDU
@@ -183,7 +185,7 @@ int TUNDevice_processPDU(void * s, getPDU_t getPDU, void * source)
 
    // Si c'est juste pour tester si je suis pret
    if ((getPDU == NULL) || (source == NULL)) { 
-      printf_debug(DEBUG_ALWAYS, "getPDU and source should now be non NULL\n");
+      printf_debug(DEBUG_TUN, "getPDU and source should now be non NULL\n");
       return 1;
    }
 

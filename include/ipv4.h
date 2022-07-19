@@ -69,5 +69,9 @@ void IPv4_setDestination(struct IPv4_t * ipv4,
 			 void * destination,
 			 processPDU_t destProcessPDU);
 
+/**
+ * @brief Traitement d'une PDU
+ */
+unsigned short IPv4_buildChecksum(unsigned short * addr, short count);
 
 #endif

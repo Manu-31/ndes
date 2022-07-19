@@ -1,3 +1,10 @@
+/**
+ * @file muxfcfs.h
+ * @brief Définition d'un multiplexeur FCFS
+ * 
+ * Il permet donc de transformer un nombre quelconque de sources en
+ * une source unique.  
+ */
 #ifndef __DEF_MUX_FCFS
 #define __DEF_MUX_FCFS
 

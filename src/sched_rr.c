@@ -1,5 +1,6 @@
-/** @file sched_rr.c
- *  @brief Un ordonnanceur round robin élémentaire
+/** 
+ * @file sched_rr.c
+ * @brief Un ordonnanceur round robin élémentaire
  */
 
 #include <sched_rr.h>
@@ -62,8 +63,8 @@ void rrSched_addSource(struct rrSched_t * sched,
    sched->srcGetPDU[sched->nbSources++] = getPDU;
 }
 
-/*
- * La fonction permettant de demander une PDU à notre scheduler
+/**
+ * @brief : La fonction permettant de demander une PDU à notre scheduler
  * C'est ici qu'est implanté l'algorithme
  */
 struct PDU_t * rrSched_getPDU(void * s)
@@ -84,7 +85,8 @@ struct PDU_t * rrSched_getPDU(void * s)
    } while ((result == NULL) && (next != sched->lastServed));
 
    if (result)
-     sched->lastServed = next;
+      sched->lastServed = next;
+
    return result;
 }
 

@@ -1,7 +1,8 @@
-/*
- * Programme de test du multiplexeur FCFS
- *
- *
+/**
+ * @file Programme de test du multiplexeur FCFS
+ * 
+ * @brief Ce programme crée NBSRC sources qui sont miltiplexées puis
+ * traitées par un ordonnanceur FCFS
  */
 #include <stdio.h>     // printf, ...
 
@@ -10,7 +11,11 @@
 #include <pdu-sink.h>
 #include <pdu-source.h>
 
+// Le nombre de sources
 #define NBSRC 10
+
+// L'interarrivée pour chaque source
+#define LAMBDA 5.0
 
 int main()
 {
@@ -36,8 +41,8 @@ int main()
 
    /* Les sources */
    for (n = 0; n < NBSRC; n++) {
-      source[n] = PDUSource_create(dateGenerator_createExp(5.0), mux, muxfcfs_processPDU);
-
+      source[n] = PDUSource_create(dateGenerator_createExp(LAMBDA),
+				   mux, muxfcfs_processPDU);
    }
 
    /* On active les sources */

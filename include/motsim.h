@@ -140,7 +140,7 @@ void motSim_exit(int retValue);
 #define DEBUG_OBJECT      0x00008000
 #define DEBUG_IPV4        0x00010000
 #define DEBUG_CLOCK       0x00020000  // Pour synchroniser les horloges
-
+#define DEBUG_TUN         0x00040000  // Le TUN pour communiquer avec le monde
 #define DEBUG_DVB         0x10000000
 #define DEBUG_KS          0x20000000
 #define DEBUG_MALLOC      0x40000000
@@ -169,10 +169,10 @@ static unsigned long debug_mask __attribute__ ((unused)) = 0x00000000
   //     | DEBUG_PDU
   //     | DEBUG_OBJECT
   //     | DEBUG_MALLOC     // L'utilisation de malloc
-       | DEBUG_TBD          // Le code pas implanté
-       | DEBUG_CLOCK        // Synchronisation des horloges
-       | DEBUG_IPV4       // Ma tentative de IPv4
+  //     | DEBUG_CLOCK        // Synchronisation des horloges
+  //     | DEBUG_IPV4       // Ma tentative de IPv4
   //       | DEBUG_ALWAYS
+       | DEBUG_TBD          // Le code pas implanté
   ;
 
 #else
